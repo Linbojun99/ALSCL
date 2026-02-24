@@ -174,7 +174,7 @@ bio_vars <- sim_cal(params)
 # 3. Simulate population dynamics (100 years, 95-year burn-in → 20 quarterly observations)
 sim <- sim_data(bio_vars, params,
                 sim_year = 100, output_dir = tempdir(),
-                iter_range = 42, return_iter = 42)
+                iter_range = 55, return_iter = 55)
 
 # 4. Prepare data frames (LengthBin + year columns)
 nyear <- sim$nyear
