@@ -7,7 +7,7 @@
 
 **Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**
 
-ALSCL is an R package for fitting statistical catch-at-length models to fishery-independent survey data using [TMB](https://github.com/kaskr/adcomp) (Template Model Builder). See the [User Guide vignette](vignettes/ALSCL_User_Guide.Rmd) and the paper:
+ALSCL is an R package for fitting statistical catch-at-length models to fishery-independent survey data using [TMB](https://github.com/kaskr/adcomp) (Template Model Builder). See the [User Guide](ALSCL_User_Guide.Rmd) and the paper:
 
 > Zhang, F. & Cadigan, N. G. (2022). An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks. *Fish and Fisheries*, 23, 1121–1135. [doi:10.1111/faf.12673](https://doi.org/10.1111/faf.12673)
 
@@ -30,7 +30,7 @@ Estimation is performed via maximum likelihood with the objective function calcu
 
 - For questions about how to use ALSCL or interpret the model results, please post on the [Discussion board](https://github.com/Linbojun99/ALSCL/discussions).
 - For bug reports or feature requests, please post in the [Issue tracker](https://github.com/Linbojun99/ALSCL/issues).
-- See the [User Guide vignette](vignettes/ALSCL_User_Guide.Rmd) for a comprehensive bilingual (English/Chinese) walkthrough with worked examples.
+- See the [User Guide](ALSCL_User_Guide.Rmd) for a comprehensive bilingual (English/Chinese) walkthrough with worked examples.
 
 ## Citation
 
