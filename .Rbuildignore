@@ -1,0 +1,11 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^scr$
+^LICENSE\.md$
+inst/extdata/.*\.o$
+inst/extdata/.*\.so$
+inst/extdata/.*\.dll$
+^ALSCL_User_Guide\.Rmd$
+^output$
+^ACLlogo\.png$
+^ALSCLlogo\.png$

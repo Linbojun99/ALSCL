@@ -1,0 +1,50 @@
+Package: ALSCL
+Title: Age-and-Length-Structured Catch-at-Length Stock Assessment Models
+Version: 2.0.0
+Authors@R: c(
+    person("Hongyu", "Lin", role = c("aut", "cre"), email = "linbojun99@gmail.com",
+           comment = c(ORCID = "0000-0001-6226-179X")),
+    person("Fan", "Zhang", role = "aut", email = "f-zhang@shou.edu.cn",
+           comment = c(ORCID = "0000-0003-0214-1790")),
+    person("Sisong", "Dong", role = "ctb"))
+Maintainer: Hongyu Lin <linbojun99@gmail.com>
+Description: Provides two integrated statistical models for survey-based
+    catch-at-length stock assessment built on the Template Model Builder (TMB)
+    framework. The ACL (Age-structured Catch-at-Length) model tracks populations
+    in age space and projects catch into length space via a proportion-at-length-
+    given-age matrix. The ALSCL (Age-and-Length-Structured Catch-at-Length) model
+    maintains a full three-dimensional population array across length, age, and
+    year, with fishing mortality operating directly on length classes through a
+    growth transition matrix. Both models are particularly suited for hard-to-age
+    fisheries stocks where length is the primary observation. The package includes
+    multi-start optimization with optional parallel computing, simulation testing,
+    retrospective analysis with Mohn's rho, a comprehensive suite of diagnostic
+    visualization functions, and a model comparison framework for rigorous
+    evaluation of alternative model structures.
+License: MIT + file LICENSE
+URL: https://github.com/HongYuUsc/ALSCL
+BugReports: https://github.com/HongYuUsc/ALSCL/issues
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends:
+    R (>= 3.5.0)
+Imports:
+    stats,
+    utils,
+    scales,
+    TMB,
+    dplyr,
+    tidyr,
+    ggplot2,
+    reshape2,
+    ggridges,
+    cowplot,
+    RColorBrewer,
+    patchwork
+Suggests:
+    knitr,
+    rmarkdown,
+    parallel
+VignetteBuilder: knitr

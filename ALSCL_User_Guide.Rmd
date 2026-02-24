@@ -1,0 +1,1707 @@
+---
+title: "ALSCL Package User Guide / ALSCL 套件使用指南"
+subtitle: "Age-and-Length-Structured Catch-at-Length Stock Assessment Models"
+author: "ALSCL Development Team"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    highlight: tango
+    code_folding: show
+    fig_width: 10
+    fig_height: 7
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE,
+  fig.align = "center", fig.width = 10, fig.height = 7, dpi = 300
+)
+```
+
+
+# Introduction / 简介
+
+The **ALSCL** package provides two integrated statistical models for length-based fisheries stock assessment, built on the Template Model Builder (TMB) framework for fast maximum likelihood estimation via automatic differentiation. The package includes a comprehensive suite of diagnostic visualization, model comparison, and retrospective analysis tools.
+
+**ALSCL** 套件提供两个整合式的体长渔获量资源评估统计模型，基于 TMB 框架利用自动微分进行快速最大概似估计。包含完整的诊断可视化、模型对比和回顾分析工具。
+
+## Two Core Models / 两大核心模型
+
+**ACL (Age-structured Catch-at-Length)**：Tracks population in age space $N(A, Y)$. Projects catch to length space via a **pla matrix** (proportion-at-length-given-age). Estimates $F_A$ (fishing mortality at age). Classic approach — fast, well-suited when growth is predictable.
+
+**ACL（年龄结构化体长渔获量模型）**：在年龄空间追踪种群 $N(A, Y)$。通过 **pla 矩阵**将渔获投影至体长空间。估计 $F_A$。经典方法 — 快速，适合生长可预测的物种。
+
+**ALSCL (Age-and-Length-Structured Catch-at-Length)**：Maintains a full 3D array $N(L, A, Y)$ — numbers by length, age, and year. Growth via a **transition matrix** $G$. Estimates $F_L$ (fishing mortality at length) directly; $F_A$ is derived. Superior when individual growth variability is high or selectivity is length-dependent.
+
+**ALSCL（年龄-体长结构化体长渔获量模型）**：维护完整三维阵列 $N(L, A, Y)$。通过**生长转移矩阵** $G$ 建模。直接估计 $F_L$，$F_A$ 为衍生量。适合生长变异大或选择性依赖体长的物种。
+
+
+# Installation / 安装
+
+```{r install-pkg, eval=FALSE}
+install.packages(c("TMB", "reshape2", "ggplot2", "patchwork", "ggridges", "cowplot"))
+# devtools::install_github("Linbojun99/ALSCL")
+```
+
+```{r load-libs}
+library(ALSCL)
+library(ggplot2)
+library(patchwork)
+```
+
+
+# Data Preparation / 数据准备
+
+Both models require three input data frames: `data.CatL` (catch-at-length), `data.wgt` (weight-at-length), `data.mat` (maturity-at-length). All must share the same `LengthBin` labels and year column names.
+
+两个模型都需要三个数据框：`data.CatL`（体长别渔获量）、`data.wgt`（体长别体重）、`data.mat`（体长别成熟度），它们必须共享相同的体长标签和年份列名。
+
+| LengthBin | 2020 | 2021 | ... | 2039 |
+|:----------|-----:|-----:|----:|-----:|
+| <7 | 12.5 | 14.2 | ... | 9.7 |
+| 7-9 | 45.8 | 51.3 | ... | 38.1 |
+| ... | ... | ... | ... | ... |
+| 47-49 | 3.1 | 2.8 | ... | 4.2 |
+| >49 | 1.3 | 0.7 | ... | 1.2 |
+
+First column = `LengthBin` (string labels). Supported formats include open-ended labels (`"<7"`, `">49"`), continuous ranges (`"7-9"`, `"9-11"`), and non-overlapping ranges (`"0-20"`, `"21-25"`). Bins can be unequal width. No NA allowed — use 0.
+
+第一列 = `LengthBin`（字符串标签）。支持的格式包括开放式标签（`"<7"`, `">49"`）、连续区间（`"7-9"`, `"9-11"`）和非重叠区间（`"0-20"`, `"21-25"`）。区间宽度可以不等。不允许 NA — 用 0 代替。
+
+## Simulating Example Data / 模拟示例数据
+
+For this guide we use `sim_data()` with a tuna-like parameter set (M6 operating model) to generate realistic survey catch-at-length data. The M6 model features quarterly time steps, dome-shaped selectivity, and a growth transition matrix — making it a comprehensive demonstration of both ACL and ALSCL capabilities. The simulation runs for 100 years with a 95-year burn-in, producing 20 quarterly time steps of observation data.
+
+本 Guide 使用 `sim_data()` 配合类金枪鱼参数集（M6 运行模型）生成模拟调查数据。M6 模型具有季度时间步长、穹顶形选择性和生长转移矩阵 — 全面展示 ACL 和 ALSCL 的功能。模拟运行 100 年，95 年 burn-in，产生 20 个季度时间步的观测数据。
+
+```{r simulate-data}
+# Step 1: Initialize biological parameters (M6 tuna preset)
+# 第一步：初始化生物参数（M6 金枪鱼预设）
+params <- initialize_params(species = "tuna")
+# Key params pre-loaded: nage=20, M=0.2, Linf=152, vbk=0.38,
+# rec.age=0.25, growth_step=0.25, dome-shaped selectivity
+# You can override any param: initialize_params(species = "tuna", M = 0.25)
+
+# Step 2: Calculate derived biological variables
+# 第二步：计算衍生生物变量（pla + Gij 矩阵、体重、成熟度等）
+bio_vars <- sim_cal(params)
+
+# Step 3: Simulate population dynamics (single replicate, seed = 88)
+# 第三步：模拟种群动态（单次重复，种子 = 88）
+sim <- sim_data(bio_vars, params,
+                sim_year   = 100,
+                output_dir = tempdir(),
+                iter_range = 55,
+                return_iter = 55)
+```
+
+```{r format-data}
+# Convert sim_data() output to run_acl/run_alscl input format
+# 将 sim_data() 输出转换为 run_acl/run_alscl 输入格式
+nyear_obs <- sim$nyear                                   # 20 quarterly steps
+nlen      <- sim$nlen                                    # 23 length bins (5mm)
+year_char <- as.character(2020:(2020 + nyear_obs - 1))   # "2020" ... "2039"
+
+# Bin labels with open-ended first/last / 开放式首尾标签
+finite_borders <- seq(15, 120, 5)
+len_labels <- c(
+  paste0("<", finite_borders[1]),                                           # "<15"
+  paste0(finite_borders[-length(finite_borders)], "-", finite_borders[-1]), # "15-20" ...
+  paste0(">", finite_borders[length(finite_borders)])                       # ">120"
+)
+
+# Survey catch-at-length (SN_at_len: nyear x nlen)
+data.CatL <- data.frame(LengthBin = len_labels, t(sim$SN_at_len), check.names = FALSE)
+colnames(data.CatL) <- c("LengthBin", year_char)
+
+# Weight-at-length (constant across years)
+data.wgt <- data.frame(LengthBin = len_labels, sim$weight, check.names = FALSE)
+colnames(data.wgt) <- c("LengthBin", year_char)
+
+# Maturity-at-length (constant across years)
+data.mat <- data.frame(LengthBin = len_labels, sim$mat, check.names = FALSE)
+colnames(data.mat) <- c("LengthBin", year_char)
+```
+
+
+## Using Your Own Data / 使用自己的数据
+
+If you have real survey data as CSV files, simply read them in and set the biological parameters for your species. The format must match the table above.
+
+如果您有自己的调查数据 CSV 文件，直接读取并设定物种的生物参数即可。格式需与上表一致。
+
+```{r user-data, eval=FALSE}
+# Read your own CSV files / 读取自己的 CSV 数据
+data.CatL <- read.csv("your_catch_at_length.csv", check.names = FALSE)
+data.wgt  <- read.csv("your_weight_at_length.csv", check.names = FALSE)
+data.mat  <- read.csv("your_maturity_at_length.csv", check.names = FALSE)
+
+# Set biological parameters for your species / 设定您物种的生物参数
+rec.age <- 1      # recruitment age / 补充年龄
+nage    <- 7      # max age (plus group) / 最大年龄
+M       <- 0.8    # natural mortality / 自然死亡率
+sel_L50 <- 28     # 50% survey selectivity length / 调查选择性 L50
+sel_L95 <- 36     # 95% survey selectivity length / 调查选择性 L95
+
+# Fit model / 拟合模型
+result <- run_acl(data.CatL, data.wgt, data.mat,
+                  rec.age = rec.age, nage = nage, M = M,
+                  sel_L50 = sel_L50, sel_L95 = sel_L95,
+                  train_times = 3, silent = TRUE)
+```
+
+
+# Model Configuration & Fitting / 模型设定与拟合
+
+```{r model-config}
+# Biological parameters matching the M6 tuna operating model
+# 与 M6 金枪鱼运行模型匹配的生物学参数
+rec.age  <- 0.25   # quarterly recruitment age / 季度补充年龄
+nage     <- 20     # quarterly ages 0.25–5.0 / 季度年龄
+M        <- 0.2    # quarterly natural mortality / 季度自然死亡率
+sel_L50  <- 30     # 50% survey selectivity / 调查选择性 L50
+sel_L95  <- 50     # 95% survey selectivity / 调查选择性 L95
+```
+
+## Running the ACL Model / 运行 ACL 模型
+
+```{r run-acl}
+result_acl <- run_acl(
+  data.CatL = data.CatL, data.wgt = data.wgt, data.mat = data.mat,
+  rec.age = rec.age, nage = nage, M = M,
+  sel_L50 = sel_L50, sel_L95 = sel_L95,
+
+  # Starting values (tuna: Linf=152, vbk=0.38, quarterly F~0.2)
+  # 起始值（金枪鱼：Linf=152, vbk=0.38, 季度 F~0.2）
+  parameters = list(
+    log_init_Z     = log(1),          # initial total mortality / 初始总死亡率
+    log_std_log_N0 = log(0.5),        # SD of initial age-structure / 初始年龄结构 SD
+    mean_log_R     = 5,               # mean log-recruitment / 平均对数补充量
+    log_std_log_R  = log(0.3),        # SD of log-R deviations / 对数 R 偏差 SD
+    logit_log_R    = log(0.75 / 0.25),# recruitment AR1 correlation / 补充量 AR1
+    mean_log_F     = log(0.2),        # mean log-F (quarterly) / 平均对数 F
+    log_std_log_F  = log(0.5),        # SD of log-F deviations / 对数 F 偏差 SD
+    logit_log_F_y  = log(0.75 / 0.25),# F year-correlation / F 年间相关
+    logit_log_F_a  = log(0.75 / 0.25),# F age-correlation / F 年龄相关
+    log_vbk        = log(0.38),       # VB growth rate k / VB 生长速率 k
+    log_Linf       = log(152),        # asymptotic length / 渐近体长
+    t0             = 1 / 152,         # VB t0 / VB t0
+    log_cv_len     = log(0.2),        # CV of length-at-age / 体长变异系数
+    log_std_index  = log(0.1)         # survey observation error / 调查观测误差
+  ),
+
+  # Lower bounds / 下界
+  parameters.L = list(
+    log_init_Z     = log(0.1),
+    log_std_log_N0 = log(0.01),
+    mean_log_R     = 1,
+    log_std_log_R  = log(0.01),
+    logit_log_R    = -20,
+    mean_log_F     = log(0.0001),
+    log_vbk        = log(0.1),        # k >= 0.1
+    log_Linf       = log(100),        # Linf >= 100
+    log_cv_len     = log(0.01),
+    log_std_index  = log(0.01)
+  ),
+
+  # Upper bounds / 上界
+  parameters.U = list(
+    log_init_Z     = log(3),
+    log_std_log_N0 = log(5),
+    mean_log_R     = 10,
+    log_std_log_R  = log(1),
+    logit_log_R    = 10,
+    mean_log_F     = log(1),
+    log_vbk        = log(0.5),        # k <= 0.5
+    log_Linf       = log(200),        # Linf <= 200
+    log_cv_len     = log(1),
+    log_std_index  = log(1)
+  ),
+
+  train_times = 3,    # 3 random starting points / 3 个随机起始点
+  output  = FALSE,    # suppress auto figure output / 不自动输出图
+  silent  = F      # suppress progress messages / 静默模式
+)
+cat(sprintf("ACL -- converge: %s | bound_hit: %s | Linf=%.1f (true %.1f) | k=%.3f (true %.3f)\n",
+            result_acl$converge, result_acl$bound_hit,
+            result_acl$report$Linf, params$Linf,
+            result_acl$report$vbk, params$vbk))
+```
+
+
+## Running the ALSCL Model / 运行 ALSCL 模型
+
+ALSCL uses the same data inputs and biological parameters as ACL, with the addition of `growth_step` to control the time resolution of the growth transition matrix.
+
+ALSCL 使用与 ACL 相同的数据输入和生物学参数，额外需要 `growth_step` 控制生长转移矩阵的时间分辨率。
+
+```{r run-alscl}
+result_alscl <- run_alscl(
+  data.CatL = data.CatL, data.wgt = data.wgt, data.mat = data.mat,
+  rec.age = rec.age, nage = nage, M = M,
+  sel_L50 = sel_L50, sel_L95 = sel_L95,
+  growth_step = 0.25,     # quarterly growth transition / 季度生长转移
+
+  # Starting values (tuna: Linf=152, vbk=0.38, quarterly dynamics)
+  # 起始值（金枪鱼：Linf=152, vbk=0.38, 季度动态）
+  parameters = list(
+    log_init_Z       = log(1),
+    log_sigma_log_N0 = log(0.5),
+    mean_log_R       = 5,
+    log_sigma_log_R  = log(0.3),
+    logit_log_R      = log(0.75 / 0.25),
+    mean_log_F       = log(0.2),
+    log_sigma_log_F  = log(0.5),
+    logit_log_F_y    = log(0.75 / 0.25),
+    logit_log_F_l    = log(0.75 / 0.25),
+    log_vbk          = log(0.38),
+    log_Linf         = log(152),
+    log_t0           = log(1 / 152),
+    log_cv_len       = log(0.2),
+    log_cv_grow      = log(0.2),
+    log_sigma_index  = log(0.1)
+  ),
+
+  # Lower bounds / 下界
+  parameters.L = list(
+    log_init_Z       = log(0.1),
+    log_sigma_log_N0 = log(0.01),
+    mean_log_R       = 1,
+    log_sigma_log_R  = log(0.01),
+    logit_log_R      = -20,
+    mean_log_F       = log(0.0001),
+    logit_log_F_y    = -20,
+    logit_log_F_l    = -10,
+    log_vbk          = log(0.1),
+    log_Linf         = log(100),
+    log_cv_len       = log(0.01),
+    log_cv_grow      = log(0.01),
+    log_sigma_index  = log(0.01)
+  ),
+
+  # Upper bounds / 上界
+  parameters.U = list(
+    log_init_Z       = log(3),
+    log_sigma_log_N0 = log(5),
+    mean_log_R       = 10,
+    log_sigma_log_R  = log(1),
+    logit_log_R      = 10,
+    mean_log_F       = log(1),
+    logit_log_F_y    = 20,
+    logit_log_F_l    = 10,
+    log_vbk          = log(0.5),
+    log_Linf         = log(200),
+    log_cv_len       = log(1),
+    log_cv_grow      = log(1),
+    log_sigma_index  = log(1)
+  ),
+
+  train_times = 3,
+  silent = TRUE
+)
+cat(sprintf("ALSCL -- converge: %s | bound_hit: %s | Linf=%.1f (true %.1f) | k=%.3f (true %.3f)\n",
+            result_alscl$converge, result_alscl$bound_hit,
+            result_alscl$report$Linf, params$Linf,
+            result_alscl$report$vbk, params$vbk))
+```
+
+### A Note on Parameter Tuning / 关于参数调试的说明
+
+In practice, both ACL and ALSCL may hit parameter boundaries or converge to local optima with default starting values. When `result$bound_hit` reports `TRUE`, the estimates at that boundary should be treated with caution. This is **expected behavior** in nonlinear optimization -- the user is responsible for adjusting starting values, bounds, and `train_times` to achieve reliable convergence for their specific dataset and species.
+
+在实际应用中，ACL 和 ALSCL 都可能在默认起始值下撞到参数边界或收敛到局部最优。当 `result$bound_hit` 报告 `TRUE` 时，边界处的估计值需谨慎对待。这是非线性优化中的 **正常现象** -- 用户需要根据自己的数据集和物种调整起始值、边界和 `train_times` 以获得可靠的收敛结果。
+
+Common strategies include: adjusting bounds to bracket biologically plausible ranges, using multiple random starts (`train_times`), narrowing bounds around known values, or fixing certain parameters via `map`. See the "Customizing Parameters" section below for detailed guidance.
+
+常用策略包括：调整边界以包围生物学合理范围、使用多个随机起始点（`train_times`）、缩小已知值附近的边界、或通过 `map` 固定某些参数。详见下方"自定义参数"章节。
+
+This guide focuses on demonstrating the package's functionality and API usage. The parameter values shown here serve as examples -- users should calibrate them to their own species and data.
+
+本指南重点展示包的功能和 API 用法。此处所示参数值仅作示例 -- 用户应根据自己的物种和数据进行校准。
+
+
+# Customizing Parameters, Bounds & Map / 自定义参数、边界和 Map
+
+Both `run_acl()` and `run_alscl()` accept three optional arguments that give you full control over the optimization: `parameters` (starting values), `parameters.L` / `parameters.U` (lower/upper bounds), and `map` (which parameters to fix or estimate). You only need to specify the entries you want to change — everything else keeps its default value.
+
+`run_acl()` 和 `run_alscl()` 都接受三个可选参数来完全控制优化过程：`parameters`（起始值）、`parameters.L` / `parameters.U`（上下界）和 `map`（固定/估计哪些参数）。你只需指定需要修改的条目，其余保持默认值。
+
+## Viewing Default Values / 查看默认值
+
+`create_parameters()` returns the initial values, lower bounds, and upper bounds for all optimizer parameters. It supports three built-in species presets (`"flatfish"`, `"tuna"`, `"krill"`) that provide biologically-calibrated starting values from actual assessment scripts, or generic wide-range defaults when no species is specified.
+
+`create_parameters()` 返回优化器所有参数的初始值、下界和上界。它支持三种内置物种预设（`"flatfish"`、`"tuna"`、`"krill"`），提供来自实际评估脚本的生物学校准起始值；也可不指定物种使用通用宽范围默认值。
+
+```{r view-defaults, eval=FALSE}
+# List available species presets / 列出可用物种预设
+create_parameters("acl", species = "?")
+#> Available species presets:
+#>   'flatfish' — M7 yellowtail flounder (annual, Linf=60, nage=15)
+#>   'tuna'     — M6 tuna (quarterly, Linf=152, nage=20)
+#>   'krill'    — Antarctic krill (ACL: Linf=90 fixed; ALSCL: Linf=60 estimated)
+
+# Generic defaults (wide bounds) / 通用默认值（宽边界）
+p_generic <- create_parameters("acl")
+
+# Species-specific: flatfish ACL / 物种预设：比目鱼 ACL
+p_flatfish_acl <- create_parameters("acl", species = "flatfish")
+
+# Species-specific: tuna ALSCL / 物种预设：金枪鱼 ALSCL
+p_tuna_alscl <- create_parameters("alscl", species = "tuna")
+
+# Species-specific: krill ACL (Linf=90, typically fixed via map)
+p_krill_acl <- create_parameters("acl", species = "krill")
+
+# Species-specific + custom override / 物种预设 + 自定义覆盖
+p_krill_custom <- create_parameters("acl", species = "krill",
+  parameters = list(log_Linf = log(85)))  # override just Linf
+```
+
+The key parameters and their defaults are shown below. All growth/variance parameters are on the **log or logit scale** to ensure positivity/bounded range during optimization.
+
+关键参数及其默认值如下表。所有生长/方差参数均在 **对数或 logit 尺度**上以确保优化中的正性/有界性。
+
+| Parameter | ACL name | ALSCL name | Default | Meaning |
+|:----------|:---------|:-----------|:--------|:--------|
+| Initial Z | `log_init_Z` | `log_init_Z` | 0.5 / log(0.5) | log(total mortality) for equilibrium age structure |
+| Mean Recruitment | `mean_log_R` | `mean_log_R` | 5 | log-scale mean recruitment |
+| SD of R deviations | `log_std_log_R` | `log_sigma_log_R` | log(0.2) / log(1) | log(SD) of recruitment random effects |
+| AR(1) correlation of R | `logit_log_R` | `logit_log_R` | logit(0.75) | logit-scale autocorrelation |
+| Mean F | `mean_log_F` | `mean_log_F` | log(0.3) | log-scale mean fishing mortality |
+| SD of F deviations | `log_std_log_F` | `log_sigma_log_F` | log(0.8) / log(1) | **fixed by default** (via map) |
+| AR(1) corr. F (year) | `logit_log_F_y` | `logit_log_F_y` | logit(0.75) | **fixed by default** (via map) |
+| AR(1) corr. F (age/len) | `logit_log_F_a` | `logit_log_F_l` | logit(0.75) | **fixed by default** (ACL map) |
+| VB growth k | `log_vbk` | `log_vbk` | log(0.2) / log(0.4) | log(Von Bertalanffy k) |
+| VB Linf | `log_Linf` | `log_Linf` | log(60) | log(asymptotic length) |
+| VB t0 | `t0` | `log_t0` | 1/60 / log(1/60) | **fixed by default** (via map) |
+| Length CV | `log_cv_len` | `log_cv_len` | log(0.3) | log(CV of length-at-age) |
+| Growth CV | — | `log_cv_grow` | log(0.3) | ALSCL only: log(CV of growth increment) |
+| Observation error | `log_std_index` | `log_sigma_index` | log(0.1) | log(SD) of survey observation error |
+
+
+## Overriding Starting Values / 覆盖起始值
+
+Pass a named list to `parameters` — only include the entries you want to change. This is what we did earlier to fix the ALSCL convergence problem.
+
+通过 `parameters` 传入一个命名列表 — 只需包含要修改的条目。这就是我们之前修复 ALSCL 收敛问题的方法。
+
+```{r custom-start, eval=FALSE}
+# Example: override Linf, vbk, and mean_log_R for ACL
+# 示例：覆盖 ACL 的 Linf、vbk 和 mean_log_R 起始值
+result <- run_acl(data.CatL, data.wgt, data.mat,
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  parameters = list(
+    log_Linf   = log(60),   # asymptotic length ≈ 60mm
+    log_vbk    = log(0.2),  # growth rate
+    mean_log_R = 8          # log(R) ≈ 8 → R ≈ 3000
+  ),
+  train_times = 3, silent = TRUE)
+```
+
+
+## Overriding Bounds / 覆盖参数边界
+
+Pass named lists to `parameters.L` and `parameters.U`. The optimizer (`nlminb`) will constrain estimated parameters within these bounds. Again, only list the entries you want to change.
+
+通过 `parameters.L` 和 `parameters.U` 传入命名列表。优化器 (`nlminb`) 会将估计参数限制在这些边界内。同样，只列出需要修改的条目。
+
+```{r custom-bounds, eval=FALSE}
+# Example: tighter Linf bounds for ALSCL
+# 示例：为 ALSCL 设置更紧的 Linf 边界
+result <- run_alscl(data.CatL, data.wgt, data.mat,
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  growth_step = 1,
+  parameters   = list(log_Linf = log(60), log_vbk = log(0.2)),
+  parameters.L = list(log_Linf = log(40), log_vbk = log(0.1)),  # Linf ≥ 40, k ≥ 0.1
+  parameters.U = list(log_Linf = log(100), log_vbk = log(1.0)),  # Linf ≤ 100, k ≤ 1.0
+  train_times = 5, silent = TRUE)
+```
+
+If a parameter hits its bound exactly (`result$bound_hit == TRUE`), consider widening the bounds — or investigate whether the model specification is appropriate for your data.
+
+如果参数精确撞到边界（`result$bound_hit == TRUE`），考虑放宽边界 — 或检查模型设定是否适合您的数据。
+
+
+## Customizing the Map (Fix / Estimate Parameters) / 自定义 Map（固定/估计参数）
+
+The `map` argument controls which parameters are **fixed** (not estimated) during optimization. A parameter mapped to `factor(NA)` is held at its starting value; all others are freely estimated.
+
+`map` 参数控制优化过程中哪些参数被 **固定**（不估计）。映射为 `factor(NA)` 的参数保持在起始值不变；其余参数自由估计。
+
+The default map fixes these parameters (because they are usually not identifiable from length-composition data alone):
+
+默认 map 固定以下参数（因为它们通常无法仅从体长组成数据中辨识）：
+
+```{r show-default-map, eval=FALSE}
+# Default map (same for ACL and ALSCL conceptually)
+# 默认 map（ACL 和 ALSCL 概念上相同）
+generate_map()
+# $log_std_log_F  = factor(NA)   — SD of F deviations: fixed
+# $logit_log_F_y  = factor(NA)   — AR(1) of F over years: fixed
+# $logit_log_F_a  = factor(NA)   — AR(1) of F over ages: fixed
+# $t0             = factor(NA)   — VB t0 parameter: fixed
+```
+
+To **free a normally-fixed parameter**, override it with an estimable factor. To **fix additional parameters**, add them to the map.
+
+要 **释放通常固定的参数**，用可估计的 factor 覆盖它。要 **额外固定参数**，将其添加到 map。
+
+```{r custom-map, eval=FALSE}
+# Example 1: Fix Linf at 90mm (e.g., from external data) while estimating vbk
+# 示例 1：将 Linf 固定为 90mm（如来自外部数据），同时估计 vbk
+result <- run_acl(data.CatL, data.wgt, data.mat,
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  parameters = list(log_Linf = log(90)),   # starting value = fixed value
+  map = list(log_Linf = factor(NA)),       # fix Linf during optimization
+  train_times = 3, silent = TRUE)
+
+# Example 2: Free F year-correlation (normally fixed) + fix Linf
+# 示例 2：释放 F 年相关性（通常固定）+ 固定 Linf
+result <- run_acl(data.CatL, data.wgt, data.mat,
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  parameters = list(log_Linf = log(90)),
+  map = list(
+    log_Linf    = factor(NA),     # fix Linf
+    logit_log_F_y = factor(1)     # FREE: estimate F year-correlation
+  ),
+  train_times = 3, silent = TRUE)
+```
+
+The `generate_map()` function merges your custom map entries with the defaults: entries you specify replace the defaults, while unspecified entries keep their default (`factor(NA)`) value. If you pass a map entry that is already in the default (like `t0 = factor(NA)`), it simply reaffirms the default.
+
+`generate_map()` 函数将你的自定义 map 条目与默认值合并：你指定的条目替换默认值，未指定的条目保持默认。
+
+
+## Full Customization Example / 完整自定义示例
+
+Here is a comprehensive example showing, showing `parameters`, bounds, and `map` all together:
+
+下面是一个完整示例，同时展示 `parameters`、边界和 `map`：
+
+```{r full-custom-example, eval=FALSE}
+# --- ACL with custom parameters, bounds, and map ---
+result_acl <- run_acl(data.CatL, data.wgt, data.mat,
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+
+  parameters = list(
+    log_init_Z     = 0.5,
+    mean_log_R     = 5,
+    log_std_log_R  = log(1),
+    mean_log_F     = log(0.3),
+            log_vbk        = log(0.2),
+    log_Linf       = log(90),       # fixed via map below
+    log_cv_len     = log(0.3),
+    log_std_index  = log(0.1)
+  ),
+
+  parameters.L = list(
+    mean_log_R    = log(10),
+    log_vbk       = log(0.1),
+    log_std_index = log(0.01)
+  ),
+
+  parameters.U = list(
+    mean_log_R    = 20,
+    log_vbk       = log(1),
+    log_std_index = log(1)
+  ),
+
+  map = list(
+    log_Linf = factor(NA),        # fix Linf at 90mm
+    t0       = factor(NA)         # fix t0 (default)
+  ),
+
+  train_times = 3, silent = TRUE
+)
+
+# --- ALSCL with custom parameters, bounds, and map ---
+result_alscl <- run_alscl(data.CatL, data.wgt, data.mat,
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  growth_step = 1,
+
+  parameters = list(
+    log_init_Z       = log(0.5),
+    mean_log_R       = 5,
+    mean_log_F       = log(0.3),
+            log_vbk          = log(0.2),
+    log_Linf         = log(60),     # estimated (not fixed)
+    log_cv_len       = log(0.3),
+    log_cv_grow      = log(0.3),
+    log_sigma_index  = log(0.1)
+  ),
+
+  parameters.L = list(
+    log_Linf  = log(40),
+    log_vbk   = log(0.1)
+  ),
+  parameters.U = list(
+    log_Linf  = log(100),
+    log_vbk   = log(1)
+  ),
+
+  map = list(
+    log_sigma_log_F = factor(NA),   # fix F SD (default)
+    log_t0          = factor(NA)    # fix t0 (default)
+    # Note: log_Linf NOT in map → it will be estimated
+  ),
+
+  train_times = 5, silent = TRUE
+)
+```
+
+Note the key difference: in the ACL run above, `log_Linf` is in the `map` (fixed at 90mm — a common approach when Linf is known from external tagging data). In the ALSCL run, `log_Linf` is **not** in the `map` so it is freely estimated within bounds 40–100mm.
+
+注意关键区别：上面的 ACL 运行中 `log_Linf` 在 `map` 中（固定为 90mm — 当 Linf 可从外部标记数据获得时常用的方法）。ALSCL 运行中 `log_Linf` **不在** `map` 中，因此在 40–100mm 范围内自由估计。
+
+
+# Single-Model Diagnostic Plots / 单模型诊断图
+
+All `plot_*()` functions return `ggplot2` objects. You can add layers with `+`, combine with `patchwork`, or store in variables.
+
+> **Common theme parameters / 通用主题参数**: The following functions accept per-call theme overrides — `title`, `xlab`, `ylab`, `font_family`, `title_size`, `axis_title_size`, `axis_text_size`, `strip_text_size`, `legend_text_size`, `x_breaks`, `base_theme`, `title_hjust`: **plot_CatL, plot_residuals, plot_VB, plot_pla, plot_recruitment, plot_SSB_Rec, plot_ridges, plot_retro, plot_fishing_mortality**. For the remaining functions (**plot_biomass, plot_abundance, plot_catch, plot_SSB, plot_deviance**), styling comes from the global `acl_theme_set()` system or direct ggplot2 layers.
+
+---
+
+## plot_CatL — Catch-at-Length Fit / 体长渔获量拟合
+
+Compares observed vs predicted catch-at-length. Two display modes with distinct aesthetic controls.
+
+### Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `type` | `"length"` | `"length"`: time series per length bin; `"year"`: length composition per year |
+| `exp_transform` | `FALSE` | Apply `exp()` back-transform from log scale |
+| `point_size` | 2.5 | Observed point size (type="length") |
+| `point_color` | `"#D32F2F"` | Observed point color (type="length") |
+| `point_shape` | 16 | Observed point shape (type="length") |
+| `line_size` | 1.2 | Predicted line thickness (type="length") |
+| `line_color` | `"black"` | Predicted line color (type="length") |
+| `line_type` | `"solid"` | Predicted line type (type="length") |
+| `line_size1` | 1.8 | **Estimated** line thickness (type="year") |
+| `line_color1` | `"#D32F2F"` | **Estimated** line color (type="year") |
+| `line_type1` | `"solid"` | **Estimated** line type (type="year") |
+| `line_alpha1` | 1 | **Estimated** line opacity (type="year") |
+| `line_size2` | 1.0 | **Observed** line thickness (type="year") |
+| `line_color2` | `"#1976D2"` | **Observed** line color (type="year") |
+| `line_type2` | `"solid"` | **Observed** line type (type="year") |
+| `line_alpha2` | 0.6 | **Observed** line opacity (type="year") |
+| `facet_ncol` | `NULL` | Facet columns |
+| `facet_scales` | `"free"` | Facet scales: `"free"`, `"free_y"`, `"free_x"`, `"fixed"` |
+| `return_data` | `FALSE` | Return `list(plot, data)` |
+
+```{r catl-year, fig.height=12}
+plot_CatL(result_acl, type = "year")
+```
+
+```{r catl-length, fig.height=8}
+plot_CatL(result_acl, type = "length")
+```
+
+```{r catl-custom-year, fig.height=12}
+# Customize both lines / 自定义双线
+plot_CatL(result_acl, type = "year",
+          line_size1 = 2.0, line_color1 = "darkred", line_alpha1 = 1,
+          line_size2 = 1.2, line_color2 = "grey50", line_alpha2 = 0.5,
+          facet_ncol = 5)
+```
+
+```{r catl-exp, fig.height=12}
+# Back-transform from log scale / 指数转换回自然尺度
+plot_CatL(result_acl, type = "year", exp_transform = TRUE)
+```
+
+```{r catl-length-style, fig.height=8}
+# Custom points + line for "length" mode / 自定义 "length" 模式
+plot_CatL(result_acl, type = "length",
+          point_size = 3, point_color = "navy", point_shape = 17,
+          line_color = "firebrick", line_size = 1.5, line_type = "dashed",
+          facet_ncol = 3, facet_scales = "fixed")
+```
+
+---
+
+## plot_residuals — Residual Diagnostics / 残差诊断
+
+Residuals (observed − predicted) with LOESS smoother. Random scatter around zero = good fit.
+
+### Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `type` | `"length"` | `"length"` (by length bin) or `"year"` (by year) |
+| `f` | 0.4 | LOESS span (0–1); smaller = more responsive |
+| `smooth_color` | `"blue"` | Smoother line color |
+| `hline_color` | `"red"` | Zero-reference line color |
+| `line_color` | `"black"` | Data line color |
+| `line_size` | 1 | Line thickness |
+| `facet_ncol` | `NULL` | Facet columns |
+| `facet_scales` | `"free"` | Facet scales |
+| `resid_cap` | `NULL` | Cap residuals at +/- this value. Tail bins (e.g. `>120` for tuna) with near-zero observations produce extreme log-residuals that distort the plot. Try `resid_cap = 1`. |
+| `return_data` | `FALSE` | Return data |
+
+```{r resid-year, fig.height=5}
+plot_residuals(result_acl, type = "year")
+```
+
+```{r resid-length, fig.height=8}
+plot_residuals(result_acl, type = "length")
+```
+
+```{r resid-custom, fig.height=5}
+plot_residuals(result_acl, type = "year",
+               f = 0.25, smooth_color = "darkgreen",
+               hline_color = "grey60", line_size = 1.5)
+```
+
+---
+
+## plot_VB — Von Bertalanffy Growth Curve / VB 生长曲线
+
+$L(a) = L_\infty (1 - e^{-k(a - t_0)})$ with parameter annotations.
+
+### Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `age_range` | `c(1, 25)` | Age range to plot |
+| `se` | `FALSE` | Show confidence interval |
+| `se_type` | `"ribbon"` | `"ribbon"` or `"errorbar"` |
+| `se_color` | `"red"` | CI color |
+| `se_alpha` | 0.2 | CI transparency |
+| `line_size` | 1.2 | Curve thickness |
+| `line_color` | `"red"` | Curve color |
+| `line_type` | `"solid"` | Curve line type |
+| `text_size` | 5 | Parameter annotation font size |
+| `text_color` | `"black"` | Annotation text color |
+
+```{r vb-basic}
+plot_VB(result_acl)
+```
+
+```{r vb-ribbon}
+plot_VB(result_acl, se = TRUE, se_color = "steelblue", se_alpha = 0.3)
+```
+
+```{r vb-errorbar}
+plot_VB(result_acl, se = TRUE, se_type = "errorbar",
+        age_range = c(0, 10), line_color = "darkblue",
+        text_size = 4.5, text_color = "grey30")
+```
+
+---
+
+## plot_pla — Proportion-at-Length-given-Age / 年龄对应体长比例矩阵
+
+ACL-specific heatmap. Each column = body length probability distribution for a given age class.
+
+### Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `low_col` | `"white"` | Gradient low endpoint |
+| `high_col` | `"red"` | Gradient high endpoint |
+
+```{r pla-basic}
+plot_pla(result_acl)
+```
+
+```{r pla-custom}
+plot_pla(result_acl, low_col = "#F7FBFF", high_col = "#08306B")
+```
+
+---
+
+## plot_recruitment — Recruitment Time Series / 补充量时间序列
+
+Annual recruitment estimates (numbers entering at `rec.age`).
+
+### Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `line_size` | 1.5 | Line thickness |
+| `line_color` | `"#D32F2F"` | Line color |
+| `line_type` | `"solid"` | Line type |
+| `se` | `FALSE` | Show CI |
+| `se_type` | `"ribbon"` | `"ribbon"` or `"errorbar"` |
+| `se_color` | `"#D32F2F"` | CI color |
+| `se_alpha` | 0.2 | CI transparency |
+| `return_data` | `FALSE` | Return `list(plot, data)` |
+
+```{r rec-basic}
+plot_recruitment(result_acl)
+```
+
+```{r rec-ribbon}
+plot_recruitment(result_acl, se = TRUE, se_alpha = 0.25)
+```
+
+```{r rec-errorbar}
+plot_recruitment(result_acl, se = TRUE, se_type = "errorbar",
+                 line_color = "navy", se_color = "navy", line_size = 1.8)
+```
+
+---
+
+## plot_fishing_mortality — Fishing Mortality / 捕捞死亡率
+
+### Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `type` | `"year"` | `"year"` (total F), `"age"` (F-at-age, ACL), `"length"` (F-at-length, ALSCL only) |
+| `se` | `FALSE` | CI (type="year" only) |
+| `se_type` | `"ribbon"` | CI style |
+| `se_color` | `"red"` | CI color |
+| `se_alpha` | 0.2 | CI transparency |
+| `line_size` | 1 | Line thickness |
+| `line_color` | `"red"` | Line color |
+| `line_type` | `"solid"` | Line type |
+| `facet_ncol` | `NULL` | Facet columns (for age/length) |
+| `facet_scales` | `"free"` | Facet scales |
+| `return_data` | `FALSE` | Return data |
+
+```{r f-year}
+plot_fishing_mortality(result_acl, type = "year")
+```
+
+```{r f-year-se}
+plot_fishing_mortality(result_acl, type = "year", se = TRUE)
+```
+
+```{r f-age, fig.height=8}
+plot_fishing_mortality(result_acl, type = "age", facet_ncol = 4)
+```
+
+```{r f-length-alscl, fig.height=8}
+# ALSCL-specific: F at each length bin / ALSCL 特有：各体长组 F
+plot_fishing_mortality(result_alscl, type = "length", facet_ncol = 3)
+```
+
+---
+
+## plot_biomass — Biomass / 生物量
+
+### Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `type` | `"B"` | `"B"` (total), `"BL"` (at-length), `"BA"` (at-age) |
+| `se` | `FALSE` | CI (type="B" only) |
+| `se_color` | `"red"` | CI color |
+| `se_alpha` | 0.2 | CI transparency |
+| `line_size` | 1.2 | Line thickness |
+| `line_color` | `"red"` | Line color |
+| `line_type` | `"solid"` | Line type |
+| `facet_ncol` | `NULL` | Facet columns |
+| `facet_scales` | `"free"` | Facet scales |
+| `return_data` | `FALSE` | Return data |
+
+```{r biomass-total}
+plot_biomass(result_acl, type = "B")
+```
+
+```{r biomass-se}
+plot_biomass(result_acl, type = "B", se = TRUE,
+             line_color = "steelblue", se_color = "steelblue")
+```
+
+```{r biomass-BL, fig.height=8}
+plot_biomass(result_acl, type = "BL", facet_ncol = 3, line_color = "darkgreen")
+```
+
+---
+
+## plot_abundance — Abundance / 丰度
+
+Same structure as `plot_biomass`. `type`: `"N"` (total), `"NL"` (at-length), `"NA"` (at-age). Same parameters.
+
+```{r abundance-N}
+plot_abundance(result_acl, type = "N")
+```
+
+```{r abundance-NL, fig.height=8}
+plot_abundance(result_acl, type = "NL", facet_ncol = 3)
+```
+
+---
+
+## plot_catch — Predicted Catch / 预测渔获量
+
+Same structure. `type`: `"CN"` (total), `"CNA"` (at-age), `"CNL"` (at-length). Same parameters.
+
+```{r catch-CN}
+plot_catch(result_acl, type = "CN")
+```
+
+```{r catch-CNA, fig.height=8}
+plot_catch(result_acl, type = "CNA", facet_ncol = 4)
+```
+
+---
+
+## plot_SSB — Spawning Stock Biomass / 产卵亲鱼生物量
+
+SSB = biomass of mature individuals. Same structure. `type`: `"SSB"` (total), `"SBL"` (at-length), `"SBA"` (at-age). Same parameters.
+
+```{r ssb-total}
+plot_SSB(result_acl, type = "SSB")
+```
+
+```{r ssb-se}
+plot_SSB(result_acl, type = "SSB", se = TRUE, line_color = "darkred")
+```
+
+---
+
+## plot_SSB_Rec — SSB-Recruitment Relationship / SSB-补充量关系
+
+Scatterplot of SSB (x) vs subsequent recruitment (y), connected by temporal trajectory.
+
+### Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `age_at_recruitment` | 1 | Time lag (years) between SSB and recruitment |
+| `point_size` | 2 | Point size |
+| `point_color` | `"black"` | Point color |
+| `point_shape` | 16 | Point shape |
+| `return_data` | `FALSE` | Return data |
+
+```{r ssb-rec}
+plot_SSB_Rec(result_acl)
+```
+
+```{r ssb-rec-custom}
+plot_SSB_Rec(result_acl, age_at_recruitment = 2,
+             point_size = 3, point_color = "darkblue", point_shape = 17)
+```
+
+---
+
+## plot_ridges -- Ridgeline Length Frequency / 山脊图体长频率
+
+Stacked density curves. Left = observed, right = estimated (side by side).
+
+### Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `ridges_alpha` | 0.8 | Fill transparency |
+| `ridges_scale` | `NULL` (auto) | Ridge height multiplier. `NULL` auto-scales so peaks fill ~80% of inter-year spacing. Increase for taller ridges. Essential for species with many length bins where proportions are small. |
+| `palette` | `"viridis"` | 8 presets or custom color vector |
+
+**8 built-in palettes:** `"viridis"`, `"ocean"`, `"sunset"`, `"forest"`, `"fire"`, `"spectral"`, `"turbo"`, `"plasma"`. Or pass a custom vector like `c("navy", "white", "firebrick")`.
+
+```{r ridges-viridis}
+plot_ridges(result_acl)
+```
+
+```{r ridges-ocean}
+plot_ridges(result_acl, palette = "ocean")
+```
+
+```{r ridges-custom}
+plot_ridges(result_acl, palette = c("#0D1B2A", "#2E86AB", "#72EFDD"))
+```
+
+---
+
+## plot_deviance — Deviance Contributions / 偏差贡献
+
+### Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `type` | `"R"` | `"R"` (recruitment) or `"F"` (fishing mortality — by age/ACL, by length/ALSCL) |
+| `se` | `TRUE` | Show error bars |
+| `log` | `TRUE` | Log-transform y-axis |
+| `point_size` | 3 | Point size |
+| `point_color` | `"white"` | Point fill color |
+| `point_shape` | 21 | Point shape |
+| `line_size` | 1 | Line thickness |
+| `line_color` | `"black"` | Line color |
+| `line_type` | `"solid"` | Line type |
+| `se_color` | `"black"` | Error bar color |
+| `se_width` | 0.5 | Error bar cap width |
+| `facet_ncol` | `NULL` | Facet columns (type="F") |
+| `facet_scales` | `"free"` | Facet scales |
+
+```{r deviance-R}
+plot_deviance(result_acl, type = "R")
+```
+
+```{r deviance-F, fig.height=8}
+plot_deviance(result_acl, type = "F", facet_ncol = 4)
+```
+
+```{r deviance-custom}
+plot_deviance(result_acl, type = "R", log = FALSE,
+              point_color = "steelblue", point_size = 4, se_width = 0.3)
+```
+
+
+# ALSCL Diagnostics (Parallel to ACL) / ALSCL 诊断（与 ACL 对照）
+
+All `plot_*()` functions auto-detect model type. The same function calls work for both ACL and ALSCL — the only difference is the model object passed in. Below we show each major diagnostic for ALSCL alongside its ACL counterpart for easy comparison.
+
+所有 `plot_*()` 函数自动检测模型类型。相同的函数调用对 ACL 和 ALSCL 均适用 — 唯一区别是传入的模型对象。下面展示 ALSCL 的每项主要诊断及其 ACL 对照。
+
+## CatL Fit / 体长渔获量拟合
+
+```{r alscl-catl-year, fig.height=12}
+# ALSCL: CatL by year / ALSCL：按年份体长渔获量
+plot_CatL(result_alscl, type = "year")
+```
+
+```{r alscl-catl-length, fig.height=8}
+# ALSCL: CatL by length bin / ALSCL：按体长组
+plot_CatL(result_alscl, type = "length")
+```
+
+## Residuals / 残差
+
+```{r alscl-resid-year, fig.height=5}
+plot_residuals(result_alscl, type = "year")
+```
+
+```{r alscl-resid-length, fig.height=8}
+# resid_cap = 1 clips extreme tail-bin residuals (e.g. >120 bin)
+# where near-zero observations produce log-residuals of +/-3
+# resid_cap = 1 截断极端尾部体长组残差（如 >120 组）
+plot_residuals(result_alscl, type = "length", resid_cap = 1)
+```
+
+## Growth Curve / 生长曲线
+
+```{r alscl-vb, fig.height=5}
+# ALSCL growth curve with CI / ALSCL 生长曲线含置信区间
+plot_VB(result_alscl, se = TRUE)
+```
+
+## Recruitment / 补充量
+
+```{r alscl-rec, fig.height=5}
+plot_recruitment(result_alscl, se = TRUE, se_type = "ribbon")
+```
+
+## Fishing Mortality / 捕捞死亡率
+
+```{r alscl-f-year, fig.height=5}
+# ALSCL: F by year / ALSCL：年度 F
+plot_fishing_mortality(result_alscl, type = "year", se = TRUE)
+```
+
+```{r alscl-f-length, fig.height=8}
+# ALSCL: F by length bin (vs ACL by age) / ALSCL：体长别 F（ACL 为年龄别）
+plot_fishing_mortality(result_alscl, type = "length", facet_ncol = 5)
+```
+
+## Biomass / 生物量
+
+```{r alscl-biomass-total, fig.height=5}
+plot_biomass(result_alscl, type = "B", se = TRUE)
+```
+
+```{r alscl-biomass-BL, fig.height=8}
+# Biomass at length: facets follow numeric bin order / 按体长分面（数值顺序排列）
+plot_biomass(result_alscl, type = "BL", facet_ncol = 3)
+```
+
+## Abundance / 丰度
+
+```{r alscl-abundance-N, fig.height=5}
+plot_abundance(result_alscl, type = "N", se = TRUE)
+```
+
+```{r alscl-abundance-NL, fig.height=8}
+plot_abundance(result_alscl, type = "NL", facet_ncol = 3)
+```
+
+## Catch / 渔获量
+
+```{r alscl-catch-CN, fig.height=5}
+plot_catch(result_alscl, type = "CN", se = TRUE)
+```
+
+```{r alscl-catch-CNL, fig.height=8}
+plot_catch(result_alscl, type = "CNL", facet_ncol = 3)
+```
+
+## SSB / 产卵群体生物量
+
+```{r alscl-ssb, fig.height=5}
+plot_SSB(result_alscl, se = TRUE)
+```
+
+## SSB-Recruitment Relationship / 产卵量-补充量关系
+
+```{r alscl-ssb-rec, fig.height=5}
+plot_SSB_Rec(result_alscl)
+```
+
+## Ridgeline Density / 山脊密度图
+
+```{r alscl-ridges, fig.height=8}
+plot_ridges(result_alscl, palette = "ocean")
+```
+
+## Deviance / 偏差
+
+```{r alscl-deviance-R, fig.height=5}
+plot_deviance(result_alscl, type = "R")
+```
+
+```{r alscl-deviance-F, fig.height=8}
+# F deviance by length (ALSCL) vs by age (ACL) / F 偏差按体长（ALSCL）vs 按年龄（ACL）
+plot_deviance(result_alscl, type = "F", facet_ncol = 3)
+```
+
+
+# Model Comparison / 模型对比
+
+All comparison functions share **common comparison parameters** (not repeated below): `model1_name`/`model2_name`, `colors` (named 2-color vector), `linetypes` (named 2-linetype vector), `linewidth`.
+
+## compare_models — Quantitative Metrics / 定量指标
+
+Returns RMSE, MAE, R², MAPE, AIC, BIC, NLL, nPar.
+
+```{r compare-table}
+comp <- compare_models(result_acl, result_alscl, data.CatL)
+print(comp)
+```
+
+---
+
+## plot_compare_ts — Time Series Overlay / 时间序列叠加
+
+### Unique parameters
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `quantities` | `c("SSB","R","B","N","CN","CB")` | Which quantities; accepts `"SSB"`, `"R"`, `"B"`, `"N"`, `"CN"`, `"CB"`, `"F"` |
+| `se` | `FALSE` | Show CI ribbons |
+| `ncol` | `NULL` | Facet columns |
+| `scales` | `NULL` | Facet scales |
+| `return_data` | `FALSE` | Return data |
+
+```{r ts-ssb, fig.height=5}
+plot_compare_ts(result_acl, result_alscl, quantities = "SSB")
+```
+
+```{r ts-R, fig.height=5}
+plot_compare_ts(result_acl, result_alscl, quantities = "R")
+```
+
+```{r ts-multi, fig.height=8}
+plot_compare_ts(result_acl, result_alscl,
+                quantities = c("SSB", "R", "B"), ncol = 1)
+```
+
+```{r ts-custom, fig.height=5}
+plot_compare_ts(result_acl, result_alscl, quantities = "R",
+                colors = c(ACL = "darkgreen", ALSCL = "darkorange"),
+                linetypes = c(ACL = "solid", ALSCL = "longdash"),
+                linewidth = 1.5)
+```
+
+```{r ts-se, fig.height=5}
+plot_compare_ts(result_acl, result_alscl, quantities = "SSB", se = TRUE)
+```
+
+---
+
+## plot_compare_residuals — Four-Panel Residual Comparison / 四面板残差
+
+Panels: (1) histogram, (2) QQ, (3) mean residual by year, (4) |residual| by length.
+
+### Unique parameters
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `bins` | 35 | Histogram bins |
+| `qq_alpha` | 0.6 | QQ point transparency |
+| `errorbar_width` | 0.3 | Error bar cap width |
+| `point_size` | `NULL` | Point size |
+| `legend_pos` | `NULL` | Legend position |
+
+```{r compare-resid}
+plot_compare_residuals(result_acl, result_alscl, data.CatL)
+```
+
+---
+
+## plot_compare_growth — Growth Curve Comparison / 生长曲线对比
+
+### Unique parameters
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `age_range` | `c(1, 20)` | Age range |
+| `ref_data` | `NULL` | External data.frame (`Age`, `Length`) |
+| `ref_name` | `"Observed VB"` | Legend label |
+| `ref_color` | `"grey30"` | Reference color |
+| `ref_linetype` | `"dotdash"` | Reference linetype |
+| `show_points` | `TRUE` | Show scatter from ref_data |
+| `point_size` | `NULL` | Scatter size |
+| `point_alpha` | 0.4 | Scatter transparency |
+| `nls_start` | `NULL` | NLS starting values override |
+
+```{r compare-growth}
+plot_compare_growth(result_acl, result_alscl)
+```
+
+---
+
+## plot_compare_CatL — Catch-at-Length Fit Comparison / 体长渔获量拟合对比
+
+### Unique parameters
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `years` | `NULL` (all) | Years to display |
+| `ncol` | 4 | Facet columns |
+| `scales` | `"free_y"` | Facet scales |
+| `obs_color` | `"grey40"` | Observed point color |
+| `obs_size` | 1.5 | Observed point size |
+| `obs_alpha` | 0.6 | Observed transparency |
+| `obs_shape` | 16 | Observed shape |
+| `legend_pos` | `NULL` | Legend position |
+
+```{r compare-catl, fig.height=14}
+plot_compare_CatL(result_acl, result_alscl, data.CatL, ncol = 4)
+```
+
+```{r compare-catl-select, fig.height=5}
+plot_compare_CatL(result_acl, result_alscl, data.CatL,
+                  years = c(2005, 2010, 2015, 2020), ncol = 2)
+```
+
+---
+
+## plot_compare_selectivity — Selectivity Curve / 选择性曲线
+
+```{r compare-sel}
+plot_compare_selectivity(result_acl, result_alscl)
+```
+
+---
+
+## plot_compare_F -- F Heatmap / F 热力图
+
+Note: When comparing an age-based model (ACL) with a length-based model (ALSCL), the heatmap shows F-at-age on the left and F-at-length on the right. These dimensions are **not directly comparable** — use `plot_compare_annual_F()` for a fair year-by-year comparison.
+
+注意：对比年龄模型（ACL）和体长模型（ALSCL）时，热力图左侧显示年龄别 F，右侧显示体长别 F。这两个维度 **不能直接比较** — 请用 `plot_compare_annual_F()` 进行公平的逐年对比。
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `palette` | `"inferno"` | Viridis family palette |
+
+```{r compare-f-heatmap, fig.height=5}
+plot_compare_F(result_acl, result_alscl)
+```
+
+---
+
+## plot_compare_annual_F -- Annual F Summary / 年度 F 汇总
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `method` | `"apical"` | `"apical"`: max F across groups (comparable across age/length models); `"mean"`: arithmetic mean (can be misleading when model dimensions differ) |
+
+Using the default `method = "apical"` (maximum F across all age or length groups per year) provides a comparable summary even when ACL uses F-at-age and ALSCL uses F-at-length. The old `method = "mean"` averages across ALL groups including those with near-zero F, which dilutes the ALSCL mean (many length bins have F close to 0 for small/large fish not selected by the fishery).
+
+默认 `method = "apical"`（每年所有年龄/体长组的最大 F）即使 ACL 用年龄别 F、ALSCL 用体长别 F，也能给出可比的汇总。旧的 `method = "mean"` 对所有组求平均（包括 F 接近 0 的组），会稀释 ALSCL 的均值。
+
+```{r compare-annual-f, fig.height=5}
+# Apical F (default): comparable across age- and length-based models
+# 顶点 F（默认）：年龄/体长模型间可比
+plot_compare_annual_F(result_acl, result_alscl)
+```
+
+---
+
+## plot_compare_metrics — Fit Statistics Bar Charts / 拟合指标条形图
+
+### Unique parameters
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `metrics` | `NULL` (all 5) | `"error"`, `"R2"`, `"MAPE"`, `"IC"`, `"npar"` |
+| `ncol` | `NULL` | Facet columns |
+| `label_size` | 3.2 | Value label size |
+| `bar_width` | 0.6 | Bar width |
+| `bar_alpha` | 0.85 | Bar transparency |
+| `legend_pos` | `NULL` | Legend position |
+
+```{r compare-bar, fig.height=8}
+plot_compare_metrics(result_acl, result_alscl, data.CatL)
+```
+
+```{r compare-bar-select, fig.height=4}
+plot_compare_metrics(result_acl, result_alscl, data.CatL,
+                     metrics = c("error", "IC"))
+```
+
+
+# Retrospective Analysis / 回顾分析
+
+Sequentially removes recent years and re-fits. Mohn's rho ($\rho$): $|\rho| < 0.20$ generally acceptable.
+
+```{r retro-acl, fig.height=6}
+retro_acl_result <- retro_acl(
+  nyear = 5, data.CatL = data.CatL, data.wgt = data.wgt, data.mat = data.mat,
+  rec.age = rec.age, nage = nage, M = M,
+  sel_L50 = sel_L50, sel_L95 = sel_L95, silent = TRUE
+)
+plot_retro(retro_acl_result)
+```
+
+```{r retro-alscl, fig.height=6}
+retro_alscl_result <- retro_alscl(
+  nyear = 5, data.CatL = data.CatL, data.wgt = data.wgt, data.mat = data.mat,
+  rec.age = rec.age, nage = nage, M = M,
+  sel_L50 = sel_L50, sel_L95 = sel_L95, growth_step = 1, silent = TRUE
+)
+plot_retro(retro_alscl_result)
+```
+
+## plot_retro Parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `rho_digits` | 4 | Decimal places for rho |
+| `rho_position` | `"top_right"` | `"top_right"`, `"top_left"`, `"bottom_right"`, `"bottom_left"` |
+| `rho_size` | 3.5 | Rho annotation font size |
+| `line_size` | 1.2 | Line thickness |
+| `point_size` | 3 | Endpoint marker size |
+| `point_shape` | 21 | Endpoint marker shape |
+| `facet_scales` | `"free"` | Facet scales |
+| `facet_col` | `NULL` | Facet columns |
+| `facet_row` | `NULL` | Facet rows |
+
+```{r retro-custom, eval=FALSE}
+plot_retro(retro_acl_result, rho_digits = 2,
+           rho_position = "top_left", rho_size = 5)
+```
+
+
+# Troubleshooting Convergence / 收敛问题排查
+
+As we saw above, ALSCL with default settings often produces `false convergence (8)` with Linf hitting its boundary. This section summarizes all available strategies.
+
+正如上面所见，ALSCL 用默认设定经常出现 `false convergence (8)` 且 Linf 撞到边界。本节汇总所有可用策略。
+
+## Diagnosis / 诊断
+
+```{r diag, eval=FALSE}
+cat("Converge:", result$converge, "\n")
+cat("Bound hit:", result$bound_hit, "\n")
+cat("Linf:", result$report$Linf, "\n")    # at boundary? / 在边界上？
+
+defaults <- create_parameters("alscl")
+cat("Linf range:", exp(defaults$parameters.L$log_Linf),
+    "to", exp(defaults$parameters.U$log_Linf), "\n")  # 10 to 100
+```
+
+## Strategy 1: Use ACL Starting Values (Recommended) / 用 ACL 起始值（推荐）
+
+This is the most effective solution. ACL converges quickly, and its Linf/k estimates place the ALSCL optimizer in the correct basin.
+
+```{r strat1, eval=FALSE}
+result_acl <- run_acl(...)
+result_alscl <- run_alscl(...,
+  parameters = list(
+    log_Linf = log(result_acl$report$Linf),
+    log_vbk  = log(result_acl$report$vbk)
+  ),
+  train_times = 5)
+```
+
+## Strategy 2: Increase train_times / 增加重启次数
+
+More random restarts increase the chance of finding the global optimum.
+
+```{r strat2, eval=FALSE}
+result <- run_alscl(..., train_times = 10, ncores = 4)
+```
+
+## Strategy 3: Custom Bounds / 自定义边界
+
+Narrow the bounds based on biological knowledge.
+
+```{r strat3, eval=FALSE}
+result <- run_alscl(...,
+  parameters.L = list(log_Linf = log(40)),
+  parameters.U = list(log_Linf = log(100)),
+  train_times = 5)
+```
+
+## Strategy 4: Combine All / 组合策略
+
+```{r strat4, eval=FALSE}
+result <- run_alscl(
+  data.CatL, data.wgt, data.mat,
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  parameters   = list(log_Linf = log(60), log_vbk = log(0.2)),
+  parameters.L = list(log_Linf = log(40)),
+  parameters.U = list(log_Linf = log(100)),
+  train_times  = 10, ncores = 4, silent = TRUE
+)
+```
+
+
+# Customizing Visualizations / 自定义可视化
+
+## Global Theme / 全局主题
+
+`acl_theme()` returns settings. `acl_theme_set()` modifies them.
+
+### acl_theme_set parameters (complete)
+
+| Parameter | Default | Description |
+|:----------|:--------|:------------|
+| `base_theme` | `"theme_bw"` | Base ggplot2 theme |
+| `font_family` | `"sans"` | Font family |
+| `title_size` | 14 | Title size (pt) |
+| `title_hjust` | 0.5 | Title alignment |
+| `axis_title_size` | 12 | Axis title size |
+| `axis_text_size` | 10 | Tick label size |
+| `strip_text_size` | 10 | Facet label size |
+| `legend_text_size` | 10 | Legend text size |
+| `x_breaks` | `NULL` | Custom x ticks |
+| `x_expand` | `c(0.01, 0.01)` | X expansion |
+| `line_color` | `"#D32F2F"` | Default line color |
+| `line_size` | 1.5 | Default line thickness |
+| `se_color` | `"#D32F2F"` | Default CI color |
+| `se_alpha` | 0.2 | Default CI transparency |
+| `compare_colors` | `c("#2166AC","#B2182B")` | Comparison colors |
+| `compare_linetypes` | `c("solid","dashed")` | Comparison linetypes |
+| `compare_linewidth` | 1.2 | Comparison line width |
+| `compare_point_size` | 2 | Comparison point size |
+| `compare_se_alpha` | 0.15 | Comparison CI transparency |
+| `compare_legend_pos` | `"bottom"` | Legend position |
+| `compare_facet_ncol` | 2 | Facet columns |
+| `compare_facet_scales` | `"free_y"` | Facet scales |
+
+```{r theme-set, fig.height=5}
+acl_theme_set(title_size = 15, axis_text_size = 11, title_hjust = 0,
+              compare_colors = c(ACL = "#264653", ALSCL = "#E76F51"))
+plot_compare_ts(result_acl, result_alscl, quantities = "SSB")
+```
+
+```{r theme-reset}
+acl_theme_set(base_theme = "theme_bw", title_hjust = 0.5)
+```
+
+## Per-Plot Override / 单图覆盖
+
+```{r per-plot, fig.height=5}
+plot_recruitment(result_acl,
+                 title = "Annual Recruitment",
+                 xlab = "Year", ylab = "Numbers",
+                 x_breaks = seq(2000, 2025, 5),
+                 base_theme = "theme_minimal", title_hjust = 0)
+```
+
+## Adding ggplot2 Layers / 添加图层
+
+```{r ggplot-layer, fig.height=5}
+plot_recruitment(result_acl) +
+  geom_hline(yintercept = mean(result_acl$report$Rec), linetype = "dashed", color = "red") +
+  labs(subtitle = "Red dashed = mean recruitment")
+```
+
+## patchwork Composition / patchwork 组合
+
+```{r patchwork, fig.height=8}
+p1 <- plot_compare_ts(result_acl, result_alscl, quantities = "SSB")
+p2 <- plot_compare_ts(result_acl, result_alscl, quantities = "R")
+p3 <- plot_compare_ts(result_acl, result_alscl, quantities = "B")
+(p1 | p2) / p3 + plot_annotation(title = "ACL vs ALSCL: Key Quantities")
+```
+
+
+# Parallel Computing / 平行运算
+
+```{r parallel, eval=FALSE}
+result <- run_acl(data.CatL, data.wgt, data.mat,
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  train_times = 10, ncores = 4, silent = TRUE)
+```
+
+
+# Example 2: Flatfish with Annual Time Steps / 示例 2：比目鱼（年度时间步长）
+
+The M6 tuna example above uses quarterly time steps with a length-based operating model. Here we demonstrate a simpler species -- a flatfish-like fish (M7 operating model) with **annual time steps**, age-based dynamics, logistic selectivity, and smaller body size. This is a good reference for species without sub-annual dynamics.
+
+上面的 M6 金枪鱼示例使用季度时间步长的体长结构运行模型。这里我们演示一个更简单的物种 -- 类比目鱼（M7 运行模型），具有 **年度时间步长**、年龄结构动态、logistic 选择性和较小的体型。适用于无亚年动态的物种参考。
+
+**Key M7 vs M6 differences / M7 与 M6 的关键差异：**
+
+| | M7 Flatfish | M6 Tuna |
+|:---|:---|:---|
+| Time step / 时间步长 | Annual / 年度 | Quarterly / 季度 |
+| `rec.age` | 1 | 0.25 |
+| `nage` | 15 (ages 1--15) | 20 (ages 0.25--5.0) |
+| `Linf` | 60 mm | 152 mm |
+| `vbk` | 0.2 | 0.38 |
+| `sel_L50 / sel_L95` | 15 / 20 | 30 / 50 |
+| `growth_step` | 1 (default) | 0.25 |
+| Selectivity / 选择性 | Logistic | Dome-shaped / 穹顶形 |
+
+## Simulate M7 Data / 模拟 M7 数据
+
+```{r simulate-m7}
+# M7: Flatfish -- annual dynamics, 2mm bins
+# M7：比目鱼 -- 年度动态，2mm 分组
+params_m7 <- initialize_params(species = "flatfish")
+bio_vars_m7 <- sim_cal(params_m7)
+sim_m7 <- sim_data(bio_vars_m7, params_m7,
+                    sim_year   = 100,
+                    output_dir = tempdir(),
+                    iter_range = 42,
+                    return_iter = 42)
+```
+
+```{r format-m7}
+# Convert to model input format / 转为模型输入格式
+nyear_m7  <- sim_m7$nyear
+nlen_m7   <- sim_m7$nlen
+year_m7   <- as.character(2020:(2020 + nyear_m7 - 1))
+
+borders_m7 <- seq(7, 49, 2)
+labels_m7  <- c(paste0("<", borders_m7[1]),
+                paste0(borders_m7[-length(borders_m7)], "-", borders_m7[-1]),
+                paste0(">", borders_m7[length(borders_m7)]))
+
+data.CatL_m7 <- data.frame(LengthBin = labels_m7, t(sim_m7$SN_at_len), check.names = FALSE)
+colnames(data.CatL_m7) <- c("LengthBin", year_m7)
+
+data.wgt_m7 <- data.frame(LengthBin = labels_m7, sim_m7$weight, check.names = FALSE)
+colnames(data.wgt_m7) <- c("LengthBin", year_m7)
+
+data.mat_m7 <- data.frame(LengthBin = labels_m7, sim_m7$mat, check.names = FALSE)
+colnames(data.mat_m7) <- c("LengthBin", year_m7)
+```
+
+## Fit ACL & ALSCL to M7 / 拟合 M7
+
+```{r fit-m7-acl}
+# ACL with flatfish preset parameters
+# 使用比目鱼预设参数的 ACL
+p_acl_m7 <- create_parameters("acl", species = "flatfish")
+
+result_acl_m7 <- run_acl(
+  data.CatL_m7, data.wgt_m7, data.mat_m7,
+  rec.age = 1, nage = 15, M = 0.2,
+  sel_L50 = 15, sel_L95 = 20,
+  parameters   = p_acl_m7$parameters,
+  parameters.L = p_acl_m7$parameters.L,
+  parameters.U = p_acl_m7$parameters.U,
+  train_times = 3, output = FALSE, silent = TRUE
+)
+cat(sprintf("ACL (M7) -- converge: %s | bound_hit: %s | Linf=%.1f (true %.1f) | k=%.3f (true %.3f)\n",
+            result_acl_m7$converge, result_acl_m7$bound_hit,
+            result_acl_m7$report$Linf, params_m7$Linf,
+            result_acl_m7$report$vbk, params_m7$vbk))
+```
+
+```{r fit-m7-alscl}
+# ALSCL with ACL-informed growth, flatfish bounds
+# 使用 ACL 生长估计 + 比目鱼边界的 ALSCL
+p_alscl_m7 <- create_parameters("alscl", species = "flatfish")
+
+result_alscl_m7 <- run_alscl(
+  data.CatL_m7, data.wgt_m7, data.mat_m7,
+  rec.age = 1, nage = 15, M = 0.2,
+  sel_L50 = 15, sel_L95 = 20,
+  growth_step = 1,           # annual (default) / 年度（默认）
+
+  # Use ACL growth + flatfish preset for other params
+  parameters = modifyList(p_alscl_m7$parameters, list(
+    log_Linf = log(result_acl_m7$report$Linf),
+    log_vbk  = log(result_acl_m7$report$vbk)
+  )),
+  parameters.L = p_alscl_m7$parameters.L,
+  parameters.U = p_alscl_m7$parameters.U,
+
+  train_times = 5, silent = F
+)
+cat(sprintf("ALSCL (M7) -- converge: %s | bound_hit: %s | Linf=%.1f (true %.1f) | k=%.3f (true %.3f)\n",
+            result_alscl_m7$converge, result_alscl_m7$bound_hit,
+            result_alscl_m7$report$Linf, params_m7$Linf,
+            result_alscl_m7$report$vbk, params_m7$vbk))
+```
+
+## M7 Diagnostics / M7 诊断
+
+```{r m7-diagnostics, fig.height=10}
+# CatL fit by year / 年度拟合
+plot_CatL(result_alscl_m7, type = "year", facet_ncol = 5)
+```
+
+```{r m7-vb, fig.height=5}
+# Growth curve: flatfish reaches ~60mm asymptote
+# 生长曲线：比目鱼渐近线约 60mm
+plot_VB(result_alscl_m7, se = TRUE)
+```
+
+```{r m7-compare-ts, fig.height=5}
+# Compare ACL vs ALSCL SSB trajectories
+# 对比 ACL 和 ALSCL 的 SSB 轨迹
+plot_compare_ts(result_acl_m7, result_alscl_m7, quantities = "SSB",
+                model1_name = "ACL", model2_name = "ALSCL")
+```
+
+```{r m7-compare-growth, fig.height=5}
+# Compare growth estimates between models
+# 对比两个模型的生长估计
+plot_compare_growth(result_acl_m7, result_alscl_m7)
+```
+
+For annual species like M7, `growth_step = 1` (the default) is appropriate. The ALSCL growth transition matrix $G$ represents one full year of growth per time step. The flatfish Linf bounds (10--100) are much tighter than tuna (100--200), reflecting the smaller body size.
+
+对于像 M7 这样的年度物种，`growth_step = 1`（默认值）是合适的。ALSCL 生长转移矩阵 $G$ 代表每个时间步一整年的生长。比目鱼 Linf 边界（10--100）比金枪鱼（100--200）窄得多，反映了较小的体型。
+
+
+# Complete Workflow / 完整流程
+
+## Example 1: M6 Tuna (Quarterly) / M6 金枪鱼（季度）
+
+```{r workflow-tuna, eval=FALSE}
+library(ALSCL)
+
+# --- Simulate M6 tuna data / 模拟 M6 金枪鱼数据 ---
+params <- initialize_params(species = "tuna")
+bio    <- sim_cal(params)
+sim    <- sim_data(bio, params, sim_year = 100,
+                   output_dir = tempdir(), iter_range = 42, return_iter = 42)
+# Convert to data.CatL / data.wgt / data.mat (see Data Preparation)
+
+# --- Fit ACL (tuna preset) ---
+p_acl <- create_parameters("acl", species = "tuna")
+r_acl <- run_acl(data.CatL, data.wgt, data.mat,
+  rec.age = 0.25, nage = 20, M = 0.2, sel_L50 = 30, sel_L95 = 50,
+  parameters = p_acl$parameters,
+  parameters.L = p_acl$parameters.L, parameters.U = p_acl$parameters.U,
+  train_times = 3, silent = TRUE)
+
+# --- Fit ALSCL (ACL-informed + tuna preset bounds) ---
+p_alscl <- create_parameters("alscl", species = "tuna")
+r_alscl <- run_alscl(data.CatL, data.wgt, data.mat,
+  rec.age = 0.25, nage = 20, M = 0.2, sel_L50 = 30, sel_L95 = 50,
+  growth_step = 0.25,
+  parameters = modifyList(p_alscl$parameters, list(
+    log_Linf = log(r_acl$report$Linf), log_vbk = log(r_acl$report$vbk))),
+  parameters.L = p_alscl$parameters.L, parameters.U = p_alscl$parameters.U,
+  train_times = 5, silent = TRUE)
+
+# --- Diagnostics ---
+plot_CatL(r_acl, type = "year"); plot_VB(r_acl, se = TRUE)
+plot_SSB(r_acl, se = TRUE); plot_recruitment(r_acl, se = TRUE)
+plot_residuals(r_acl, type = "year"); plot_fishing_mortality(r_acl, type = "year", se = TRUE)
+plot_ridges(r_acl, palette = "ocean"); plot_deviance(r_acl, type = "R")
+plot_compare_ts(r_acl, r_alscl, quantities = c("SSB", "R", "B"))
+plot_compare_growth(r_acl, r_alscl)
+```
+
+## Example 2: M7 Flatfish (Annual) / M7 比目鱼（年度）
+
+```{r workflow-flatfish, eval=FALSE}
+# --- Simulate M7 flatfish data / 模拟 M7 比目鱼数据 ---
+params_m7 <- initialize_params(species = "flatfish")
+bio_m7    <- sim_cal(params_m7)
+sim_m7    <- sim_data(bio_m7, params_m7, sim_year = 100,
+                      output_dir = tempdir(), iter_range = 42, return_iter = 42)
+# Convert to data.CatL_m7 / data.wgt_m7 / data.mat_m7 (see Example 2)
+
+# --- Fit ACL (flatfish preset) ---
+p_acl_m7 <- create_parameters("acl", species = "flatfish")
+r_acl_m7 <- run_acl(data.CatL_m7, data.wgt_m7, data.mat_m7,
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  parameters = p_acl_m7$parameters,
+  parameters.L = p_acl_m7$parameters.L, parameters.U = p_acl_m7$parameters.U,
+  train_times = 3, silent = TRUE)
+
+# --- Fit ALSCL (ACL-informed + flatfish preset bounds) ---
+p_alscl_m7 <- create_parameters("alscl", species = "flatfish")
+r_alscl_m7 <- run_alscl(data.CatL_m7, data.wgt_m7, data.mat_m7,
+  rec.age = 1, nage = 15, M = 0.2, sel_L50 = 15, sel_L95 = 20,
+  growth_step = 1,
+  parameters = modifyList(p_alscl_m7$parameters, list(
+    log_Linf = log(r_acl_m7$report$Linf), log_vbk = log(r_acl_m7$report$vbk))),
+  parameters.L = p_alscl_m7$parameters.L, parameters.U = p_alscl_m7$parameters.U,
+  train_times = 5, silent = TRUE)
+
+# --- Diagnostics ---
+plot_CatL(r_alscl_m7, type = "year"); plot_VB(r_alscl_m7, se = TRUE)
+plot_compare_ts(r_acl_m7, r_alscl_m7, quantities = c("SSB", "R", "B"))
+plot_compare_growth(r_acl_m7, r_alscl_m7)
+```
+
+
+# Function Reference / 函数参考
+
+## Core Functions
+
+| Function | Description |
+|:---------|:------------|
+| `run_acl()` | Fit ACL model |
+| `run_alscl()` | Fit ALSCL model |
+| `compare_models()` | Compute RMSE, AIC, etc. |
+| `retro_model()` | Retrospective analysis (core) |
+| `retro_acl()` | `retro_model(model_type="acl")` |
+| `retro_alscl()` | `retro_model(model_type="alscl")` |
+| `sim_data()` | Simulate fishery dynamics — dispatches to age-based (M7/krill) or length-based (M6 tuna) engine |
+| `sim_cal()` | Calculate biological variables — builds pla (age-based) or pla+Gij (length-based) |
+| `initialize_params(species)` | Initialize simulation parameters (species: "flatfish"/"tuna"/"krill"/NULL) |
+| `create_parameters("acl", species)` | ACL parameter list (species: "flatfish"/"tuna"/"krill"/NULL) |
+| `create_parameters("alscl", species)` | ALSCL parameter list (species: "flatfish"/"tuna"/"krill"/NULL) |
+| `acl_theme()` | Get theme settings |
+| `acl_theme_set()` | Modify theme settings |
+
+## Single-Model Plots
+
+| Function | Types | Key Options | Theme? |
+|:---------|:------|:------------|:------:|
+| `plot_CatL()` | `"length"`, `"year"` | `exp_transform`, dual line controls, `point_*` | ✓ |
+| `plot_residuals()` | `"year"`, `"length"` | `f`, `smooth_color`, `hline_color` | ✓ |
+| `plot_VB()` | — | `se_type`, `age_range`, `text_size/color` | ✓ |
+| `plot_pla()` | — | `low_col`, `high_col` | ✓ |
+| `plot_recruitment()` | — | `se_type` (ribbon/errorbar) | ✓ |
+| `plot_fishing_mortality()` | `"year"`, `"age"`, `"length"` | `se_type`, `facet_ncol` | partial |
+| `plot_biomass()` | `"B"`, `"BL"`, `"BA"` | `se`, `facet_ncol` | ✗ |
+| `plot_abundance()` | `"N"`, `"NL"`, `"NA"` | `se`, `facet_ncol` | ✗ |
+| `plot_catch()` | `"CN"`, `"CNA"`, `"CNL"` | `se`, `facet_ncol` | ✗ |
+| `plot_SSB()` | `"SSB"`, `"SBL"`, `"SBA"` | `se`, `facet_ncol` | ✗ |
+| `plot_SSB_Rec()` | — | `age_at_recruitment`, `point_*` | ✓ |
+| `plot_ridges()` | -- | `palette` (8 + custom), `ridges_alpha`, `ridges_scale` (auto) | Yes |
+| `plot_deviance()` | `"R"`, `"F"` | `se`, `log`, `se_width`, `point_*` | ✗ |
+
+## Comparison Plots
+
+| Function | Key Options |
+|:---------|:------------|
+| `plot_compare_ts()` | `quantities` (SSB/R/B/N/CN/CB/F), `se`, `ncol` |
+| `plot_compare_residuals()` | `bins`, `qq_alpha`, `errorbar_width` |
+| `plot_compare_growth()` | `ref_data`, `ref_name`, `show_points`, `nls_start` |
+| `plot_compare_CatL()` | `years`, `ncol`, `obs_color/size/alpha/shape` |
+| `plot_compare_selectivity()` | (common params) |
+| `plot_compare_F()` | `palette` |
+| `plot_compare_annual_F()` | `method` (`"apical"`/`"mean"`), (common params) |
+| `plot_compare_metrics()` | `metrics`, `label_size`, `bar_width/alpha` |
+| `plot_retro()` | `rho_digits`, `rho_position`, `rho_size` |
+
+
+# Session Info
+
+```{r session}
+sessionInfo()
+```
