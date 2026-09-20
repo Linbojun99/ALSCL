@@ -97,7 +97,7 @@ sim_cal <- function(params) {
 
   if (sel_type == "flat") {
     # Flat selectivity at age (all ages fully selected)
-    sel <- rep(1, nage)
+    sel <- rep(1, if (model_type == "length_based") nlen else nage)
 
   } else if (sel_type == "dome") {
     # Dome-shaped double logistic selectivity at length
@@ -119,7 +119,7 @@ sim_cal <- function(params) {
 
   } else {
     # Default fallback: flat at age
-    sel <- rep(1, nage)
+    sel <- rep(1, if (model_type == "length_based") nlen else nage)
   }
 
   # =========================================================================

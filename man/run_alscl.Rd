@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_alscl.R
 \name{run_alscl}
 \alias{run_alscl}
-\title{Run Age- and Length-Structured Statistical Catch-at-Length Model (ALSCL)}
+\title{Fit the ALSCL survey catch-at-length model}
 \usage{
 run_alscl(
   data.CatL,
@@ -25,98 +25,74 @@ run_alscl(
   output = FALSE,
   train_times = 1,
   ncores = 1,
-  silent = FALSE
+  silent = FALSE,
+  zero_action = c("missing", "error"),
+  control = list()
 )
 }
 \arguments{
-\item{data.CatL}{A data frame with length bins in column 1 and survey catch-at-length
-in subsequent columns (one per year).}
+\item{data.CatL}{Data frame or matrix with length labels in its first column,
+followed by at least two numerically labelled time columns.}
 
-\item{data.wgt}{A data frame with length bins in column 1 and weight-at-length
-in subsequent columns.}
+\item{data.wgt}{Weight-at-length, with identical labels, columns and dimensions.}
 
-\item{data.mat}{A data frame with length bins in column 1 and maturity-at-length
-(proportion 0-1) in subsequent columns.}
+\item{data.mat}{Maturity-at-length between 0 and 1, with the same layout.}
 
-\item{rec.age}{Numeric, the recruitment age (e.g. 1).}
+\item{rec.age}{Recruitment age in years, greater than t0.}
 
-\item{nage}{Numeric, the number of age classes.}
+\item{nage}{Number of age classes including the plus group (at least two).}
 
-\item{M}{Numeric, the natural mortality rate (e.g. 0.2).}
+\item{M}{Nonnegative natural mortality per model time step.}
 
-\item{sel_L50}{Numeric, the length at 50 percent survey selectivity.}
+\item{sel_L50, sel_L95}{Lengths at 50 and 95 percent survey catchability.}
 
-\item{sel_L95}{Numeric, the length at 95 percent survey selectivity.}
+\item{growth_step}{Time between consecutive ages, in years. Use 0.25 for quarters.
+ACL infers rec.age when below one, otherwise one, if this argument is NULL.}
 
-\item{growth_step}{Numeric, the growth time step. Default is 1 (annual).
-Use smaller values for sub-annual data (e.g. 0.25 for quarterly).}
+\item{parameters}{Named list of initial fixed-effect values.}
 
-\item{parameters}{A list of custom initial parameter values (default NULL = use defaults).}
+\item{parameters.L, parameters.U}{Named lower and upper bounds. Bounds are aligned
+with free parameters after applying map. Initial free values are clamped to bounds.}
 
-\item{parameters.L}{A list of custom lower bounds (default NULL = use defaults).}
+\item{map}{Named TMB factor mappings. factor(NA) fixes a parameter at its supplied
+value; NULL releases a default fixed parameter. Other defaults remain in force.}
 
-\item{parameters.U}{A list of custom upper bounds (default NULL = use defaults).}
+\item{len_mid}{Finite length-bin midpoints; overrides automatic parsing.}
 
-\item{map}{A list for TMB map to fix parameters. Default NULL uses:
-\code{log_sigma_log_F = factor(NA)} and \code{log_t0 = factor(NA)}.}
+\item{len_border}{Interior boundaries, one fewer than the number of length bins.}
 
-\item{len_mid}{Numeric vector, user-specified length bin midpoints (default NULL = auto).}
+\item{len_lower, len_upper}{Optional bounds consistent with len_border and len_mid.
+Infinite outer boundaries are allowed; the model treats the outer bins as tails.}
 
-\item{len_border}{Numeric vector, user-specified length bin borders (default NULL = auto).}
+\item{output}{Save diagnostic tables and plots below output/ when TRUE.}
 
-\item{len_lower}{Numeric vector, lower bounds of each length bin (default NULL = auto).
-First element can be -Inf. Must be same length as number of bins.}
+\item{train_times}{Positive integer; exact number of optimization passes per start.}
 
-\item{len_upper}{Numeric vector, upper bounds of each length bin (default NULL = auto).
-Last element MUST be finite (not Inf) for the growth transition matrix.}
+\item{ncores}{Positive integer; number of independent starts. Values above one
+use socket workers and jitter free parameters only.}
 
-\item{output}{Logical, if TRUE auto-save all plots and tables. Default FALSE.}
+\item{silent}{Suppress fitting progress messages when TRUE.}
 
-\item{train_times}{Numeric, number of nlminb restarts for refinement. Default 1.}
+\item{zero_action}{Exclude zero observations as missing (historical behavior),
+or reject them with "error". NA is always missing; negative/infinite values fail.}
 
-\item{ncores}{Integer, number of CPU cores. Default 1 (single start).}
-
-\item{silent}{Logical. If TRUE, suppress all progress messages. Default FALSE.
-When ncores is greater than 1, runs parallel multi-start optimization with jittered
-initial values for robustness against local optima.}
+\item{control}{A named list of nlminb control settings.}
 }
 \value{
-A list containing:
-\describe{
-\item{report}{TMB report with all estimated quantities (NLA, NL, NA, FL, FA, G, pla,
-SSB, B, Rec, CN, CNA, etc.)}
-\item{est_std}{Parameter estimates with standard errors from sdreport}
-\item{converge}{Convergence message from nlminb}
-\item{bound_hit}{Logical, whether any parameter hit its boundary}
-\item{year}{Year labels}
-\item{len_mid}{Length bin midpoints}
-\item{len_label}{Length bin labels from input data}
-\item{model_type}{\code{"ALSCL"} identifier for distinguishing from ACL results}
-}
+A list with report, opt, obj, est_std, vcov, pdHess, gradient,
+max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,
+year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics.
+The DLL remains loaded so the returned obj can be evaluated in the same session.
 }
 \description{
-Implements the ALSCL model from Zhang and Cadigan (2022) to assess
-fish population dynamics from survey catch-at-length data. Unlike the ACL model
-which tracks F at the age level, ALSCL simultaneously tracks 3D population
-dynamics across time, age, and length (NLA array), with fishing mortality
-operating at the length level and a growth transition matrix (G) applied
-at each time step.
+Fit the ALSCL survey catch-at-length model
 }
 \details{
-\strong{Key differences from \code{run_acl()}:}
-\itemize{
-\item F is modelled at \strong{length} level (\code{dev_log_F} is L x Y),
-not at age level (A x Y as in ACL).
-\item A \strong{growth transition matrix G} is applied at each time step,
-allowing length-dependent processes within cohorts.
-\item \strong{F-at-age (FA)} is an emergent property derived from NLA to NA,
-not a direct parameter.
-\item Additional parameter: \code{log_cv_grow} (CV of growth increment).
-\item \code{t0} is log-transformed (\code{log_t0}) rather than raw.
-}
-}
-\references{
-Zhang, F., and Cadigan, N. G. (2022). An age- and length-structured
-statistical catch-at-length model for hard-to-age fisheries stocks.
-\emph{Fish and Fisheries}, 23(5), 1121-1135.
+M and F are per model time step; vbk is per year. The first and last
+length bins absorb the distribution tails. Compilation uses a writable session
+cache. Optimizer success, gradient size, Hessian status and boundary hits should
+be assessed separately before interpreting estimates or uncertainty.
+
+ALSCL tracks joint length-age abundance and F at length; FA summarizes
+effective cohort survival. log_t0 represents a positive t0 below rec.age.
 }

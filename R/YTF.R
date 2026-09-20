@@ -2,7 +2,9 @@
 #'
 #' Parameter values are specified based on empirical data of yellowtail flounder on the grand Bank off Newfoundland
 #'
-#' @format A list with 24 elements:
+#' This is a parameter list, not a set of survey observation tables.
+#' Use \code{YTF_example} for reproducible, fit-ready simulated data.
+#' @format A list with 26 elements:
 #' \describe{
 #'   \item{nyear}{Number of time steps used for model diagnostic.}
 #'   \item{nlen}{Number of length bins.}
@@ -36,7 +38,8 @@
 #'
 #' }
 #' @source Parameter values are specified based on empirical data of yellowtail flounder on the grand Bank off Newfoundland .
-#' @references Your references, if applicable.
+#' @references Zhang, F. and Cadigan, N. G. (2022). Fish and Fisheries 23,
+#' 1121--1135. \doi{10.1111/faf.12673}.
 YTF <- list(
   nyear = 20,
   nlen = length(seq(6,50,2)),

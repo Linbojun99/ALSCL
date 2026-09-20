@@ -1,0 +1,22 @@
+test_that("the bundled YTF example has aligned positive survey input and provenance", {
+  e <- new.env(parent = emptyenv())
+  utils::data("YTF", "YTF_example", package = "ALSCL", envir = e)
+  x <- e$YTF_example
+  expect_null(e$YTF$data.CatL)
+  expect_length(e$YTF, 26L)
+  expect_equal(dim(x$data.CatL), c(23L, 21L))
+  expect_identical(names(x$data.CatL), names(x$data.wgt))
+  expect_identical(names(x$data.CatL), names(x$data.mat))
+  expect_identical(x$data.CatL[[1]], x$data.wgt[[1]])
+  expect_identical(x$data.CatL[[1]], x$data.mat[[1]])
+  expect_true(all(is.finite(as.matrix(x$data.CatL[-1])) & as.matrix(x$data.CatL[-1]) > 0))
+  expect_true(all(as.matrix(x$data.wgt[-1]) > 0))
+  expect_true(all(as.matrix(x$data.mat[-1]) >= 0 & as.matrix(x$data.mat[-1]) <= 1))
+  expect_equal(as.matrix(x$data.CatL[-1]), t(x$truth$SN_at_len), ignore_attr = TRUE)
+  expect_equal(x$parameters$std_SN, e$YTF$std_SN)
+  expect_identical(x$provenance$seed, 4L)
+  expect_length(x$fit_args$len_border, 22L)
+  expect_equal(x$fit_args$len_mid, e$YTF$len_mid)
+  expect_silent(do.call(ALSCL:::.acl_prepare_data,
+    c(x[c("data.CatL", "data.wgt", "data.mat")], x$fit_args)))
+})

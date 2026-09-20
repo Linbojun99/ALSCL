@@ -17,8 +17,9 @@ utils::globalVariables(c("Model", "Metric", "lower", "upper"))
 #'   \item{summary}{Data frame with convergence, objective, AIC, BIC, number of parameters.}
 #'   \item{growth}{Data frame comparing VB growth parameters.}
 #'   \item{fit_metrics}{Data frame with MSE, RMSE, R-squared, MAPE, etc. for each model.}
-#'   \item{correlation}{Data frame with Pearson correlations of SSB, Rec, B, N, CN between models.}
-#'   \item{trend_ratio}{Data frame with mean ratio (model2/model1) for each quantity.}
+#'   \item{correlation}{Data frame with Pearson correlations and Ratio_Mean,
+#'     the ratio of means (model2/model1), for common population quantities.}
+#'   \item{model1_name,model2_name}{Labels used in the comparison.}
 #' }
 #'
 #' @export
@@ -38,7 +39,7 @@ compare_models <- function(model1, model2, data.CatL,
 
   # ===== 1. Convergence & model summary =====
   get_npar <- function(m) length(m$opt$par)
-  get_nobs <- function(m, d) sum(d[, 2:ncol(d)] != 0)
+  get_nobs <- function(m, d) sum(is.finite(as.matrix(d[, -1L, drop=FALSE])) & as.matrix(d[, -1L, drop=FALSE]) > 0)
 
   n_obs <- get_nobs(model1, data.CatL)
 
@@ -68,7 +69,7 @@ compare_models <- function(model1, model2, data.CatL,
       round(bic1, 2),
       "0 (ref)",
       "0 (ref)",
-      round(as.numeric(model1$final_outer_mgc)[1], 6),
+      round(.acl_max_gradient(model1), 6),
       "1.0 (ref)"
     )),
     Model2 = as.character(c(
@@ -82,7 +83,7 @@ compare_models <- function(model1, model2, data.CatL,
       round(bic2, 2),
       round(aic2 - aic1, 2),
       round(bic2 - bic1, 2),
-      round(as.numeric(model2$final_outer_mgc)[1], 6),
+      round(.acl_max_gradient(model2), 6),
       ""
     )),
     stringsAsFactors = FALSE
@@ -103,7 +104,7 @@ compare_models <- function(model1, model2, data.CatL,
       safe_round(model1$report$t0),
       safe_round(model1$report$cv_len),
       safe_round(model1$report$cv_grow),
-      safe_round(model1$report$sigma_index)
+      safe_round(if(is.null(model1$report$sigma_index)) model1$report$std_index else model1$report$sigma_index)
     ),
     Model2 = c(
       safe_round(model2$report$Linf, 3),
@@ -111,7 +112,7 @@ compare_models <- function(model1, model2, data.CatL,
       safe_round(model2$report$t0),
       safe_round(model2$report$cv_len),
       safe_round(model2$report$cv_grow),
-      safe_round(model2$report$sigma_index)
+      safe_round(if(is.null(model2$report$sigma_index)) model2$report$std_index else model2$report$sigma_index)
     ),
     stringsAsFactors = FALSE
   )
@@ -121,7 +122,7 @@ compare_models <- function(model1, model2, data.CatL,
   calc_fit <- function(model, data.CatL) {
     observed  <- as.matrix(data.CatL[, 2:ncol(data.CatL)])
     predicted <- exp(model$report$Elog_index)
-    idx <- observed != 0
+    idx <- is.finite(observed) & observed > 0
     obs <- observed[idx]
     pred <- predicted[idx]
     errors <- obs - pred

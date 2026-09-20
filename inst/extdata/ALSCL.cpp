@@ -12,26 +12,7 @@
 #include <TMB.hpp>
 #include <iostream>
 
-template<class Type>
-Type pnorm_discrete(Type upper, Type lower){
-
-	Type zero = 0.0;
-	Type one = 1.0;
-
-	Type mid = 0.5 * (upper + lower);
-	Type mid2 = mid*mid;
-	Type mid4 = mid*mid*mid*mid;
-	Type ub = upper - mid;
-	Type lb = lower - mid;
-	Type d1 = upper - lower;
-	Type d3 = ub*ub*ub - lb*lb*lb;
-	Type d5 = ub*ub*ub*ub*ub - lb*lb*lb*lb*lb;
-	Type ts = d1 + (mid2-1)*d3/6 + (mid4-6*mid2+3)*d5/120; // taylor series expansion
-
-	Type ret = dnorm(mid,zero,one,false) * ts;
-
-	return ret;
-}
+#include "model_math.hpp"
 
 template<class Type>
 Type objective_function<Type>::operator()()
@@ -92,11 +73,11 @@ Type objective_function<Type>::operator()()
 	Type sigma_log_N0 = exp(log_sigma_log_N0);
 
 	Type sigma_log_R = exp(log_sigma_log_R);
-	Type phi_log_R = exp(logit_log_R)/(one+exp(logit_log_R));
+	Type phi_log_R = invlogit(logit_log_R);
 
 	Type sigma_log_F = exp(log_sigma_log_F);
-	Type phi_log_F_y = exp(logit_log_F_y)/(one+exp(logit_log_F_y));
-	Type phi_log_F_l = exp(logit_log_F_l)/(one+exp(logit_log_F_l));
+	Type phi_log_F_y = invlogit(logit_log_F_y);
+	Type phi_log_F_l = invlogit(logit_log_F_l);
 
 	Type vbk = exp(log_vbk);
 	Type Linf = exp(log_Linf);
@@ -119,63 +100,24 @@ Type objective_function<Type>::operator()()
 		}
 	}
 
-	// ==================== GROWTH TRANSITION MATRIX G ====================
-	// Decreasing logistic function for mean growth increment
+	// Growth conserves all survivors; the last bin absorbs the right tail.
 	matrix<Type> G(L,L);
-	for(int j=0; j<L; ++j){
-
-		Type max_inc = (one - exp(-vbk)) * Linf;
-		Type l50 = 0.5 * Linf;
-		Type l95 = 0.05 * Linf;
-		Type mean_inc = growth_step * max_inc/(one + exp(-log(19.0)*(len_mid(j)-l50)/(l95-l50)));
-
-		Type sd_inc = mean_inc * cv_grow;
-
-		for(int i=0; i<L; ++i){
-			if(i<j){
-				G(i,j) = zero; // shrinkage of body length is not allowed
-			}
-			if(i==j){
-				Type mu_lower = len_upper(i)-len_mid(j);
-				Type std_mu_lower = (mu_lower-mean_inc)/sd_inc;
-
-				int expand = 50;
-				vector<Type> lower_bin(expand);
-				Type Ub = std_mu_lower;
-				Type Lb = Ub - 1.0;
-				lower_bin(0) = pnorm_discrete(Ub,Lb);
-				for(int n=1; n<expand; ++n){
-					Ub = Ub - 1.0;
-					Lb = Ub - 1.0;
-					lower_bin(n) = pnorm_discrete(Ub,Lb);
-				}
-				G(i,j) = lower_bin.sum(); // probability of staying in current length bin
-			}
-			if(i>j){
-				Type mu1 = len_upper(i)-len_mid(j);
-				Type mu2 = len_lower(i)-len_mid(j);
-				Type std_mu1 = (mu1-mean_inc)/sd_inc;
-				Type std_mu2 = (mu2-mean_inc)/sd_inc;
-
-				int expand = 50;
-				vector<Type> mu_range(expand);
-				vector<Type> G_range(expand-1);
-				mu_range(0) = std_mu2;
-				Type inc_mu = (std_mu1 - std_mu2)/(expand-1);
-				for(int n=1; n<expand; ++n){
-					mu_range(n) = mu_range(n-1) + inc_mu;
-					G_range(n-1) = pnorm_discrete(mu_range(n),mu_range(n-1));
-				}
-				G(i,j)= G_range.sum(); // probability of growing from length bin j to i
-			}
+	G.setZero();
+	for (int j=0; j<L; ++j) {
+		Type max_inc = (one-exp(-vbk))*Linf;
+		Type l50 = Type(.5)*Linf;
+		Type l95 = Type(.05)*Linf;
+		Type mean_inc = growth_step*max_inc/(one+exp(-log(Type(19))*(len_mid(j)-l50)/(l95-l50)));
+		Type sd_inc = mean_inc*cv_grow;
+		for (int i=j; i<L; ++i) {
+			if (j==L-1) G(i,j)=one;
+			else if (i==L-1) G(i,j)=pnorm(-(len_border(L-2)-len_mid(j)-mean_inc)/sd_inc);
+			else if (i==j) G(i,j)=pnorm((len_border(i)-len_mid(j)-mean_inc)/sd_inc);
+			else G(i,j)=normal_interval((len_border(i)-len_mid(j)-mean_inc)/sd_inc,
+			                              (len_border(i-1)-len_mid(j)-mean_inc)/sd_inc);
 		}
-	}
-	G((L-1),(L-1)) = one; // plus-group: probability of staying in the largest bin is 1
-
-	for(int i=0; i<L; ++i){
-		for(int j=0; j<L; ++j){
-			if(G(i,j)<1e-20){G(i,j)=1e-20;};
-		}
+		Type total=G.col(j).sum();
+		G.col(j)/=total;
 	}
 
 	// ==================== RECRUITMENT ====================
@@ -183,49 +125,10 @@ Type objective_function<Type>::operator()()
 	vector<Type> Rec = exp(log_Rec);
 
 	// ==================== LENGTH-AT-AGE PROBABILITY MATRIX (pla) ====================
-	matrix<Type> pla(L,A);
-	for(int j = 0;j < A;++j){
-		Type ml = Linf*(one - exp(-vbk*(age(j)-t0)));
-		Type sl = ml*cv_len;
-		vector<Type> len_border_std = (len_border-ml)/sl;
-
-		int expand = 10;
-		vector<Type> lower_bin(expand);
-		Type Ub = len_border_std(0);
-		Type Lb = Ub - 1.0;
-		lower_bin(0) = pnorm_discrete(Ub,Lb);
-		for(int n=1; n<expand; ++n){
-			Ub = Ub - 1.0;
-			Lb = Ub - 1.0;
-			lower_bin(n) = pnorm_discrete(Ub,Lb);
-		}
-		pla(0,j) = lower_bin.sum(); // first length bin
-
-		for(int i=1; i< (L-1);++i){
-			pla(i,j) = pnorm_discrete(len_border_std(i),len_border_std(i-1));
-		}
-
-		vector<Type> upper_bin(expand);
-		Lb = len_border_std(L-2);
-		Ub = Lb + 1.0;
-		upper_bin(0) = pnorm_discrete(Ub,Lb);
-		for(int n=1; n<expand; ++n){
-			Lb = Lb + 1.0;
-			Ub = Lb + 1.0;
-			upper_bin(n) = pnorm_discrete(Ub,Lb);
-		}
-		pla(L-1,j) = upper_bin.sum(); // last length bin
-	}
-
-	for(int i=0; i<L; ++i){
-		for(int j=0; j<A; ++j){
-			if(pla(i,j)<1e-20){pla(i,j)=1e-20;};
-		}
-	}
+	matrix<Type> pla = length_age_key(len_border, age, Linf, vbk, t0, cv_len);
 
 	// ==================== 3D POPULATION DYNAMICS: NLA(L, A, Y) ====================
 	array<Type> NLA(L,A,Y);
-	array<Type> log_NLA(L,A,Y);
 
 	// Initializing recruitment and first year abundance
 	vector<Type> log_N0(A);
@@ -240,34 +143,25 @@ Type objective_function<Type>::operator()()
 
 	for(int j=0; j<A; ++j){
 		NLA.col(0).col(j) = pla.col(j) * N0(j);
-		log_NLA.col(0).col(j) = log(NLA.col(0).col(j));
 	}
 
 	// Core dynamics: years 2+
 	for(int i = 1; i < Y;++i){
 		// Recruitment: stationary length distribution
 		NLA.col(i).col(0) = pla.col(0) * Rec(i);
-		log_NLA.col(i).col(0) = log(NLA.col(i).col(0));
 
 		// Ages 2 to A-1: survive then grow through G
 		for(int j = 1;j < (A-1);++j){
-			vector<Type> previous = log_NLA.col(i-1).col(j-1);
-			vector<Type> mortality = ZL.col(i-1);
-			vector<Type> log_survival = previous - mortality;
-			vector<Type> survival = exp(log_survival);
-			NLA.col(i).col(j) = G * survival;   // growth transition applied here
-			log_NLA.col(i).col(j) = log(NLA.col(i).col(j));
+			vector<Type> previous = NLA.col(i-1).col(j-1);
+			vector<Type> survival = previous * exp(-ZL.col(i-1).array());
+			NLA.col(i).col(j) = G * survival;
 		}
 
 		// Plus group: accumulate A-1 and A survivors
-		vector<Type> previous_1 = log_NLA.col(i-1).col(A-2);
-		vector<Type> previous_2 = log_NLA.col(i-1).col(A-1);
-		vector<Type> mortality = ZL.col(i-1);
-		vector<Type> log_survival_1 = previous_1 - mortality;
-		vector<Type> log_survival_2 = previous_2 - mortality;
-		vector<Type> survival = exp(log_survival_1) + exp(log_survival_2);
+		vector<Type> previous_1 = NLA.col(i-1).col(A-2);
+		vector<Type> previous_2 = NLA.col(i-1).col(A-1);
+		vector<Type> survival = (previous_1 + previous_2) * exp(-ZL.col(i-1).array());
 		NLA.col(i).col(A-1) = G * survival;
-		log_NLA.col(i).col(A-1) = log(NLA.col(i).col(A-1));
 	}
 
 	// ==================== BIOMASS AND SSB (3D) ====================
@@ -284,10 +178,13 @@ Type objective_function<Type>::operator()()
 
 	// ==================== MARGINALS: AGGREGATE OVER AGE OR LENGTH ====================
 	matrix<Type> NL(L,Y);
+	NL.setZero();
 	matrix<Type> NA(A,Y);
 	matrix<Type> BL(L,Y);
+	BL.setZero();
 	matrix<Type> BA(A,Y);
 	matrix<Type> SBL(L,Y);
+	SBL.setZero();
 	matrix<Type> SBA(A,Y);
 
 	for(int i=0; i<Y; ++i){
@@ -310,10 +207,12 @@ Type objective_function<Type>::operator()()
 	// ==================== CATCH STATISTICS ====================
 	array<Type> CNLA(L,A,Y);
 	matrix<Type> CNL(L,Y);
+	CNL.setZero();
 	matrix<Type> CNA(A,Y);
 
 	array<Type> CBLA(L,A,Y);
 	matrix<Type> CBL(L,Y);
+	CBL.setZero();
 	matrix<Type> CBA(A,Y);
 
 	for(int i=0; i<Y; ++i){
@@ -347,7 +246,9 @@ Type objective_function<Type>::operator()()
 	matrix<Type> FA(A-1,Y-1);
 	for(int i=0; i<A-1; ++i){
 		for(int j=0; j<Y-1; ++j){
-			ZA(i,j) = log(NA(i,j))-log(NA(i+1,j+1));
+			vector<Type> cohort = NLA.col(j).col(i);
+			vector<Type> survivors = cohort * exp(-ZL.col(j).array());
+			ZA(i,j) = log(positive_probability(cohort.sum())) - log(positive_probability(survivors.sum()));
 			FA(i,j) = ZA(i,j) - M;
 		}
 	}
@@ -371,8 +272,9 @@ Type objective_function<Type>::operator()()
 	matrix<Type> resid_index(L,Y);
 	for(int i = 0;i < L;++i){
 		for(int j=0; j<Y; ++j){
-			Elog_index(i,j) = log_q(i) + log(NL(i,j));
-			resid_index(i,j) = (logN_at_len(i,j) - Elog_index(i,j))* na_matrix(i,j);
+			Elog_index(i,j) = log_q(i) + log(positive_probability(NL(i,j)));
+			resid_index(i,j) = zero;
+		if (na_matrix(i,j)>0) resid_index(i,j) = (logN_at_len(i,j) - Elog_index(i,j))* na_matrix(i,j);
 		}
 	}
 

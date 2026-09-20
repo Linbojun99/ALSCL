@@ -2,7 +2,7 @@
 % Please edit documentation in R/acl_theme.R
 \name{acl_theme_set}
 \alias{acl_theme_set}
-\title{Set ACL Plot Theme Options}
+\title{Set ALSCL Plot Theme Options}
 \usage{
 acl_theme_set(
   base_theme = NULL,
@@ -29,7 +29,14 @@ acl_theme_set(
   compare_facet_scales = NULL,
   titles = NULL,
   xlab = NULL,
-  ylab = NULL
+  ylab = NULL,
+  palette = NULL,
+  point_color = NULL,
+  observed_color = NULL,
+  smooth_color = NULL,
+  hline_color = NULL,
+  low_col = NULL,
+  high_col = NULL
 )
 }
 \arguments{
@@ -85,6 +92,16 @@ Examples: \code{c("blue", "red")}, \code{c(ACL = "blue", ALSCL = "red")},
 \item{xlab}{Named list. Override specific x-axis labels.}
 
 \item{ylab}{Named list. Override specific y-axis labels.}
+
+\item{palette}{Character or NULL. ggsci palette: "npg" (default), "aaas",
+"nejm", "lancet", or "jama". Changing it resets palette-derived colors;
+explicit color arguments in the same call take precedence. No arguments
+leaves settings unchanged; use acl_theme_reset() to reset.}
+
+\item{point_color, observed_color, smooth_color, hline_color}{Character or NULL.
+Default point, observation, smoother and reference-line colors.}
+
+\item{low_col, high_col}{Character or NULL. Continuous heatmap endpoints.}
 }
 \value{
 Invisible previous settings.

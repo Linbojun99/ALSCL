@@ -5,7 +5,6 @@
 \title{Initialize Parameters for the Fish Population Simulation}
 \usage{
 initialize_params(
-  species = NULL,
   nyear = NULL,
   rec.age = NULL,
   first.year = NULL,
@@ -34,14 +33,14 @@ initialize_params(
   F_mean = NULL,
   F_ar = NULL,
   F_sd = NULL,
-  R_ar = NULL
+  R_ar = NULL,
+  species = NULL,
+  growth_step = NULL,
+  burn_in = NULL,
+  observation_error = c("independent", "shared_time")
 )
 }
 \arguments{
-\item{species}{Character or NULL. Species preset name, one of
-\code{"flatfish"}, \code{"tuna"}, \code{"krill"}, or \code{"?"} to list
-presets. NULL (default) uses generic defaults equivalent to flatfish.}
-
 \item{nyear}{Integer. Total simulation years including burn-in (default 100).}
 
 \item{rec.age}{Numeric. Age of recruitment (default 1; use 0.25 for quarterly).}
@@ -99,6 +98,17 @@ presets. NULL (default) uses generic defaults equivalent to flatfish.}
 \item{F_sd}{Numeric. SD of F deviations (default 0.2).}
 
 \item{R_ar}{Numeric. AR1 coefficient for recruitment deviations (default 0.1).}
+
+\item{species}{Character or NULL. Species preset name, one of
+\code{"flatfish"}, \code{"tuna"}, \code{"krill"}, or \code{"?"} to list
+presets. NULL (default) uses generic defaults equivalent to flatfish.}
+
+\item{growth_step}{Time step in years; defaults to the species preset.}
+
+\item{burn_in}{Simulation years discarded before returning observations.}
+
+\item{observation_error}{Independent lognormal errors per length and time cell,
+or shared_time for an explicitly misspecified, perfectly correlated scenario.}
 }
 \value{
 A list containing all initialized parameters and derived variables

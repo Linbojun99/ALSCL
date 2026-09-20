@@ -2,24 +2,23 @@
 % Please edit documentation in R/diagnose_model.R
 \name{diagnose_model}
 \alias{diagnose_model}
-\title{Diagnose model results}
+\title{Diagnose a fitted assessment model}
 \usage{
 diagnose_model(data.CatL, model_result)
 }
 \arguments{
-\item{data.CatL}{A matrix containing the length grouping of the catch length,
-which represents the observed catch data in different length groups across years.}
+\item{data.CatL}{Length labels followed by time columns.}
 
-\item{model_result}{A list that contains the model output. The list should have a "report" component which contains an "Elog_index" component representing counts in length groups.}
+\item{model_result}{A fitted model result.}
 }
 \value{
-NULL. The function prints out the diagnostics and does not return anything.
+A data frame of fit metrics and convergence diagnostics.
 }
 \description{
-This function receives a model output and performs various checks, including checking if the model has reached its boundaries, if it has converged, and printing the final likelihood estimate.
+Diagnose a fitted assessment model
 }
-\examples{
-\dontrun{
-diagnose_model(data.CatL,model_result)
-}
+\details{
+Reports the optimizer convergence code, maximum absolute gradient,
+boundary status and Hessian positive definiteness separately. A successful
+optimizer code alone does not establish reliable statistical inference.
 }

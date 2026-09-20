@@ -2,7 +2,7 @@
 % Please edit documentation in R/acl_theme.R
 \name{.acl_base_theme}
 \alias{.acl_base_theme}
-\title{Build the standard ACL ggplot theme layer}
+\title{Build the standard ALSCL ggplot theme layer}
 \usage{
 .acl_base_theme(
   font_family = NULL,
@@ -16,6 +16,6 @@
 )
 }
 \description{
-Build the standard ACL ggplot theme layer
+Build the standard ALSCL ggplot theme layer
 }
 \keyword{internal}

@@ -2,24 +2,24 @@
 % Please edit documentation in R/diagnostic_metrics.R
 \name{diagnostic_metrics}
 \alias{diagnostic_metrics}
-\title{Diagnostic function for ACL}
+\title{Compute survey-fit and information-criterion diagnostics}
 \usage{
 diagnostic_metrics(data.CatL, model_result)
 }
 \arguments{
-\item{data.CatL}{A matrix containing the length grouping of the catch length,
-which represents the observed catch data in different length groups across years.}
+\item{data.CatL}{Length labels followed by time columns.}
 
-\item{model_result}{A list that contains the model output. The list should have a "report" component which contains an "Elog_index" component representing counts in length groups.}
+\item{model_result}{A fitted ACL or ALSCL result.}
 }
 \value{
-A list containing the calculated metrics: MSE, MAE, RMSE, Rsquared, MAPE, exp_var_score, max_error
+A data frame with Metric and Value. Undefined metrics are NA.
 }
 \description{
-Diagnostic function for ACL
+Compute survey-fit and information-criterion diagnostics
 }
-\examples{
-\dontrun{
-diagnostic_metrics(data.CatL, model_result)
-}
+\details{
+Only finite positive observations are included. MASE divides MAE by
+the pooled absolute one-step differences within each length-bin time series;
+pairs containing missing or zero observations are excluded. MAD is the mean
+absolute deviation of observations about their mean.
 }

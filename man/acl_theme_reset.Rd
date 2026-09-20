@@ -2,12 +2,12 @@
 % Please edit documentation in R/acl_theme.R
 \name{acl_theme_reset}
 \alias{acl_theme_reset}
-\title{Reset ACL Plot Theme to Defaults}
+\title{Reset ALSCL Plot Theme to Defaults}
 \usage{
 acl_theme_reset()
 }
 \description{
-Reset ACL Plot Theme to Defaults
+Reset ALSCL Plot Theme to Defaults
 }
 \examples{
 acl_theme_reset()

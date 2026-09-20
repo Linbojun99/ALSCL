@@ -6,10 +6,10 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "Count", "number.age"))
 #'
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
 #' @param line_size Numeric. Line thickness. Default is 1.2.
-#' @param line_color Character. Line color. Default is "red".
+#' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. Line type. Default is "solid".
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
-#' @param se_color Character. CI ribbon color. Default is "red".
+#' @param se_color Character or NULL. NULL inherits the global se_color setting.
 #' @param se_alpha Numeric. CI ribbon transparency. Default is 0.2.
 #' @param type Character. "N" (total), "NA" (at age), or "NL" (at length). Default is "N".
 #' @param facet_ncol Number of columns in facet wrap. Default is NULL.
@@ -17,15 +17,19 @@ utils::globalVariables(c("AgeGroup", "LengthGroup", "Count", "number.age"))
 #' @param return_data Logical. Whether to return processed data. Default is FALSE.
 #' @return A ggplot object or a list with plot and data.
 #' @export
-plot_abundance <- function(model_result, line_size = 1.2, line_color = "red", line_type = "solid",
-                           se = FALSE, se_color = "red", se_alpha = 0.2,
+plot_abundance <- function(model_result, line_size = 1.2, line_color = NULL, line_type = "solid",
+                           se = FALSE, se_color = NULL, se_alpha = 0.2,
                            type = c("N", "NA", "NL"), facet_ncol = NULL, facet_scales = "free",
                            return_data = FALSE) {
+  # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_color)) line_color <- acl_theme("line_color")
+  if (is.null(se_color)) se_color <- acl_theme("se_color")
+
 
   type <- match.arg(type)
   len_label <- model_result[["len_label"]]
   Year <- model_result[["year"]]
-  current_theme <- tryCatch(get("acl_get_theme", envir = asNamespace("ACL"))(), error = function(e) ggplot2::theme_minimal())
+  current_theme <- tryCatch(get("acl_get_theme", envir = asNamespace("ALSCL"))(), error = function(e) ggplot2::theme_minimal())
 
   # ==========================
   # Type = "N": Total abundance

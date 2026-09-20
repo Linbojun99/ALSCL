@@ -8,8 +8,7 @@
 #'   - logit_log_F_y: Custom value for logit_log_F_y (default is NA).
 #'   - logit_log_F_a: Custom value for logit_log_F_a (default is NA).
 #'   - t0: Custom value for t0 (default is NA).
-#'   - log_vbk: Custom value for log_vbk (default is NA).
-#'   - log_Linf: Custom value for log_Linf (default is NA).
+#'   Growth parameters log_vbk and log_Linf are free unless explicitly mapped.
 #'
 #' @return A list representing the generated map with custom or default values.
 #' @export
@@ -24,9 +23,8 @@ generate_map <- function(map = NULL) {
   )
 
   if (!is.null(map)) {
-    updated_map <- modifyList(default_map, map)
-    return(updated_map[names(map)]) # Return only specified elements
-  } else {
-    return(default_map) # Return all elements with default values
+    if (!is.list(map) || (length(map) && (is.null(names(map)) || any(!nzchar(names(map))) || anyDuplicated(names(map))))) stop("map must be a named list.")
+    for (nm in names(map)) default_map[nm] <- map[nm]
   }
+  default_map[!vapply(default_map, is.null, logical(1))]
 }

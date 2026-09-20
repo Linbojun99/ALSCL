@@ -1,0 +1,5 @@
+"Case","Model","Code","MaxGradient","pdHess","Boundary"
+"flatfish","ACL",0,8.54085201861671e-06,TRUE,FALSE
+"flatfish","ALSCL",0,7.5795059892414e-05,TRUE,FALSE
+"tuna","ACL",0,2.1320863306945e-06,TRUE,FALSE
+"tuna","ALSCL",0,2.81733050285227e-05,TRUE,FALSE

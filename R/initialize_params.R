@@ -39,6 +39,10 @@
 #' @param F_sd Numeric. SD of F deviations (default 0.2).
 #' @param R_ar Numeric. AR1 coefficient for recruitment deviations (default 0.1).
 #'
+#' @param growth_step Time step in years; defaults to the species preset.
+#' @param burn_in Simulation years discarded before returning observations.
+#' @param observation_error Independent lognormal errors per length and time cell,
+#'   or shared_time for an explicitly misspecified, perfectly correlated scenario.
 #' @return A list containing all initialized parameters and derived variables
 #'   (ages, years, etc.), ready to pass to \code{sim_cal()}.
 #'
@@ -67,8 +71,7 @@
 #' params <- initialize_params(nage = 10, Linf = 80, vbk = 0.15)
 #'
 #' @export
-initialize_params <- function(species    = NULL,
-                              nyear      = NULL,
+initialize_params <- function(nyear      = NULL,
                               rec.age    = NULL,
                               first.year = NULL,
                               nage       = NULL,
@@ -96,7 +99,11 @@ initialize_params <- function(species    = NULL,
                               F_mean     = NULL,
                               F_ar       = NULL,
                               F_sd       = NULL,
-                              R_ar       = NULL) {
+                              R_ar       = NULL, species = NULL,
+                              growth_step = NULL, burn_in = NULL,
+                              observation_error = c("independent", "shared_time")) {
+  if (is.character(nyear) && length(nyear) == 1L && is.null(species)) {species <- nyear; nyear <- NULL}
+  observation_error <- match.arg(observation_error)
 
   # =========================================================================
   # Help: list available presets
@@ -278,6 +285,18 @@ initialize_params <- function(species    = NULL,
   if (!is.null(F_sd))       sp$F_sd       <- F_sd
   if (!is.null(R_ar))       sp$R_ar       <- R_ar
 
+  if (is.null(species) && is.null(growth_step) && !is.null(rec.age) && rec.age < 1) sp$growth_step <- rec.age
+  if (!is.null(growth_step)) sp$growth_step <- growth_step
+  if (!is.null(burn_in)) sp$burn_in <- burn_in
+  sp$observation_error <- observation_error
+  sp$nage <- .acl_positive_integer(sp$nage, "nage", 2L)
+  sp$nyear <- .acl_positive_integer(sp$nyear, "nyear", 2L)
+  .acl_scalar(sp$growth_step, "growth_step", 0, TRUE)
+  .acl_scalar(sp$rec.age, "rec.age", 0, TRUE)
+  .acl_scalar(sp$M, "M", 0)
+  if (sp$t0 >= sp$rec.age) stop("t0 must be below rec.age.")
+  if (length(sp$len_border) != length(sp$len_mid)+1L || any(diff(sp$len_border)<=0) || any(diff(sp$len_mid)<=0)) stop("Invalid simulation length bins.")
+
   # Ensure model_type & growth_step exist (for backward compat / custom usage)
   if (is.null(sp$model_type))  sp$model_type  <- "age_based"
   if (is.null(sp$growth_step)) sp$growth_step <- 1
@@ -292,14 +311,8 @@ initialize_params <- function(species    = NULL,
   sp$len_border[length(sp$len_border)] <- Inf
 
   # Generate age and year vectors
-  if (sp$rec.age < 1) {
-    # Quarterly or sub-annual: ages are seq(rec.age, max_age, rec.age)
-    max_age <- sp$rec.age * sp$nage
-    sp$ages <- seq(sp$rec.age, max_age, sp$rec.age)
-  } else {
-    sp$ages <- sp$rec.age:(sp$rec.age + sp$nage - 1)
-  }
-  sp$years <- sp$first.year:(sp$first.year + sp$nyear - 1)
+  sp$ages <- sp$rec.age + seq.int(0L, sp$nage-1L) * sp$growth_step
+  sp$years <- sp$first.year + seq.int(0L, round(sp$nyear/sp$growth_step)-1L) * sp$growth_step
 
   return(sp)
 }

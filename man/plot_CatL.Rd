@@ -7,17 +7,17 @@
 plot_CatL(
   model_result,
   point_size = 2.5,
-  point_color = "#D32F2F",
+  point_color = NULL,
   point_shape = 16,
   line_size = 1.2,
-  line_color = "black",
+  line_color = NULL,
   line_type = "solid",
   line_size1 = 1.8,
-  line_color1 = "#D32F2F",
+  line_color1 = NULL,
   line_type1 = "solid",
   line_alpha1 = 1,
   line_size2 = 1,
-  line_color2 = "#1976D2",
+  line_color2 = NULL,
   line_type2 = "solid",
   line_alpha2 = 0.6,
   facet_ncol = NULL,
@@ -44,19 +44,19 @@ plot_CatL(
 
 \item{point_size}{Numeric. Specifies the size of the point in the plot. Default is 2.5.}
 
-\item{point_color}{Character. Specifies the color of the point in the plot. Default is "#D32F2F".}
+\item{point_color}{Character or NULL. NULL inherits the global observed_color setting.}
 
 \item{point_shape}{Numeric. Specifies the shape of the point in the plot. Default is 16 (filled circle). Common: 1=open circle, 16=filled circle, 17=triangle, 15=square.}
 
 \item{line_size}{Numeric. Line thickness for type="length" plot. Default is 1.2.}
 
-\item{line_color}{Character. Line color for type="length" plot. Default is "black".}
+\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
 \item{line_type}{Character. Line type for type="length" plot. Default is "solid".}
 
 \item{line_size1}{Numeric. Line thickness for estimated (Elog_index) in type="year". Default is 1.8.}
 
-\item{line_color1}{Character. Line color for estimated abundance. Default is "#D32F2F".}
+\item{line_color1}{Character or NULL. NULL inherits the global line_color setting.}
 
 \item{line_type1}{Character. Line type for estimated line. Default is "solid".}
 
@@ -64,7 +64,7 @@ plot_CatL(
 
 \item{line_size2}{Numeric. Line thickness for observed (logN_at_len) in type="year". Default is 1.0.}
 
-\item{line_color2}{Character. Line color for observed abundance. Default is "#1976D2".}
+\item{line_color2}{Character or NULL. NULL inherits the global observed_color setting.}
 
 \item{line_type2}{Character. Line type for observed line. Default is "solid".}
 
@@ -86,7 +86,7 @@ plot_CatL(
 
 \item{ylab}{Character or NULL. Custom y-axis label. If NULL, uses global theme setting.}
 
-\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "Arial").}
+\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 
 \item{title_size}{Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).}
 

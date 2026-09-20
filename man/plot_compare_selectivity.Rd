@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_compare.R
 \name{plot_compare_selectivity}
 \alias{plot_compare_selectivity}
-\title{Compare Selectivity Patterns}
+\title{Compare supplied survey catchability at length}
 \usage{
 plot_compare_selectivity(
   model1,
@@ -31,5 +31,6 @@ plot_compare_selectivity(
 A ggplot object.
 }
 \description{
-Compare Selectivity Patterns
+Connects the supplied catchability values directly, preserving their range.
+The values are fixed model inputs, not estimated fishery selectivity.
 }

@@ -2,21 +2,17 @@
 % Please edit documentation in R/compile_acl.R
 \name{compile_and_load_acl}
 \alias{compile_and_load_acl}
-\title{Compile and Load the ACL TMB Model (Cross-Platform, OpenMP-aware)}
+\title{Compile and load the ACL model in a writable session cache}
 \usage{
-compile_and_load_acl(openmp = TRUE)
+compile_and_load_acl(openmp = FALSE)
 }
 \arguments{
-\item{openmp}{Logical. Compile with OpenMP support for parallel gradient
-computation. Default is TRUE. If OpenMP is not available on the system,
-falls back to single-threaded compilation automatically.}
+\item{openmp}{Logical. Request OpenMP, with a serial fallback.}
 }
 \value{
-A list with \code{cpp_path}, \code{dll_path}, and \code{openmp} (logical, whether OpenMP was used).
+Paths and DLL name for the compiled model.
 }
 \description{
-Internal helper function that handles TMB compilation and dynamic library
-loading across Windows, macOS, and Linux. Supports OpenMP compilation
-for parallel gradient computation via \code{TMB::openmp()}.
+Compile and load the ACL model in a writable session cache
 }
 \keyword{internal}

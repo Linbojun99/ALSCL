@@ -6,8 +6,8 @@
 \usage{
 plot_pla(
   model_result,
-  low_col = "white",
-  high_col = "red",
+  low_col = NULL,
+  high_col = NULL,
   title = NULL,
   xlab = NULL,
   ylab = NULL,
@@ -25,9 +25,9 @@ plot_pla(
 \arguments{
 \item{model_result}{A list that contains model output. The model output should include a PLA report.}
 
-\item{low_col}{A string specifying the color for low probabilities. Default is "white".}
+\item{low_col}{Character or NULL. NULL inherits the global low_col setting.}
 
-\item{high_col}{A string specifying the color for high probabilities. Default is "red".}
+\item{high_col}{Character or NULL. NULL inherits the global high_col setting.}
 
 \item{title}{Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.}
 
@@ -35,7 +35,7 @@ plot_pla(
 
 \item{ylab}{Character or NULL. Custom y-axis label. If NULL, uses global theme setting.}
 
-\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "Arial").}
+\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 
 \item{title_size}{Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).}
 

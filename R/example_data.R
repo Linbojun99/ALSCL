@@ -1,30 +1,28 @@
-#' Example Catch-at-Length Survey Data
+#' Legacy anonymous survey example from the ALSCL repository
 #'
-#' A list containing three data frames for demonstrating ACL and ALSCL model
-#' fitting. The data represent anonymized survey catch-at-length observations
-#' across 9 length bins and 21 years.
+#' Three unchanged tables from Linbojun99/ALSCL. The original documentation
+#' describes them as anonymized survey observations. Species, units, sampling
+#' design and original source are not recorded, so empirical provenance remains
+#' unverified. These data must not be described as the observations of Zhang and
+#' Cadigan (2022), or used for stock advice without recovering their metadata.
 #'
-#' @format A list with three elements:
+#' @format A list of three data frames, each with 9 rows and 22 columns:
 #' \describe{
-#'   \item{data.CatL}{Survey catch-at-length. A data frame with 9 rows
-#'     (length bins) and 22 columns (LengthBin + 21 years, 2001--2021).}
-#'   \item{data.wgt}{Weight-at-length. Same dimensions as \code{data.CatL}.
-#'     Values are constant across years.}
-#'   \item{data.mat}{Maturity-at-length (proportion mature). Same dimensions
-#'     as \code{data.CatL}. Values are constant across years.}
+#'   \item{data.CatL}{LengthBin and 21 survey-index columns, 2001--2021;
+#'     includes zero values whose meaning is undocumented.}
+#'   \item{data.wgt}{Weight-at-length, constant across years; units undocumented.}
+#'   \item{data.mat}{Maturity proportions, constant across years.}
 #' }
-#'
-#' All three data frames share the same \code{LengthBin} labels:
-#' \code{"0-20"}, \code{"21-25"}, \code{"26-30"}, \code{"31-35"},
-#' \code{"36-40"}, \code{"41-45"}, \code{"46-50"}, \code{"51-55"},
-#' \code{"56-60"}.
-#'
-#' @usage data(example_data)
-#'
+#' @details The legacy labels are 0-20, 21-25, ..., 56-60. They are not
+#' contiguous continuous intervals, so passing the tables unmodified to the
+#' current model parser fails. Recover the actual measurement and binning
+#' convention before converting labels; do not silently close the gaps.
+#' This example is useful for learning data inspection and validation.
+#' \code{YTF_example} is the reproducible fitting and plotting example.
+#' @source \url{https://github.com/Linbojun99/ALSCL/blob/main/data/example_data.rda}
+#' (Git blob b64858b21cb9a1009688a48f039ac48816b1ad81).
 #' @examples
 #' data(example_data)
-#' data.CatL <- example_data$data.CatL
-#' data.wgt  <- example_data$data.wgt
-#' data.mat  <- example_data$data.mat
-#'
+#' dim(example_data$data.CatL)
+#' colSums(example_data$data.CatL[-1] == 0, na.rm = TRUE)
 "example_data"

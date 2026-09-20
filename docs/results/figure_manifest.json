@@ -1,0 +1,452 @@
+{
+  "CatL_length_FALSE": {
+    "id": "CatL_length_FALSE",
+    "zh": "调查拟合 length 对数尺度",
+    "en": "Survey fit length log scale",
+    "code": "plot_CatL(b, type = typ, exp_transform = ex, facet_ncol = 4, x_breaks = if (typ == \"length\") c(2000, \n    2010, 2015) else c(10, 30, 50), point_size = 1, line_size = 0.6, ylab = if (ex) \"Survey index\" else \"Log survey index\")",
+    "note_zh": "点为观测对数，曲线为拟合的 Elog_index。",
+    "note_en": "Points are log observations; curves show fitted Elog_index.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "CatL_length_TRUE": {
+    "id": "CatL_length_TRUE",
+    "zh": "调查拟合 length 原尺度",
+    "en": "Survey fit length original scale",
+    "code": "plot_CatL(b, type = typ, exp_transform = ex, facet_ncol = 4, x_breaks = if (typ == \"length\") c(2000, \n    2010, 2015) else c(10, 30, 50), point_size = 1, line_size = 0.6, ylab = if (ex) \"Survey index\" else \"Log survey index\")",
+    "note_zh": "原尺度曲线为 exp(Elog_index)，即对数正态中位数。",
+    "note_en": "Original-scale curves are lognormal medians, exp(Elog_index).",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "CatL_year_FALSE": {
+    "id": "CatL_year_FALSE",
+    "zh": "调查拟合 year 对数尺度",
+    "en": "Survey fit year log scale",
+    "code": "plot_CatL(b, type = typ, exp_transform = ex, facet_ncol = 4, x_breaks = if (typ == \"length\") c(2000, \n    2010, 2015) else c(10, 30, 50), point_size = 1, line_size = 0.6, ylab = if (ex) \"Survey index\" else \"Log survey index\")",
+    "note_zh": "朱红色为观测对数，深蓝色为拟合的 Elog_index。",
+    "note_en": "Vermilion curves are log observations; navy curves show fitted Elog_index.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "CatL_year_TRUE": {
+    "id": "CatL_year_TRUE",
+    "zh": "调查拟合 year 原尺度",
+    "en": "Survey fit year original scale",
+    "code": "plot_CatL(b, type = typ, exp_transform = ex, facet_ncol = 4, x_breaks = if (typ == \"length\") c(2000, \n    2010, 2015) else c(10, 30, 50), point_size = 1, line_size = 0.6, ylab = if (ex) \"Survey index\" else \"Log survey index\")",
+    "note_zh": "原尺度曲线为 exp(Elog_index)，即对数正态中位数。",
+    "note_en": "Original-scale curves are lognormal medians, exp(Elog_index).",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_abundance_N": {
+    "id": "plot_abundance_N",
+    "zh": "丰度 N",
+    "en": "Abundance N",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 总量图显示各组之和；分面图的纵轴按组调整。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. Totals sum across groups; faceted y axes adjust to each group.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_abundance_NA": {
+    "id": "plot_abundance_NA",
+    "zh": "丰度 NA",
+    "en": "Abundance NA",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 总量图显示各组之和；分面图的纵轴按组调整。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. Totals sum across groups; faceted y axes adjust to each group.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_abundance_NL": {
+    "id": "plot_abundance_NL",
+    "zh": "丰度 NL",
+    "en": "Abundance NL",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 总量图显示各组之和；分面图的纵轴按组调整。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. Totals sum across groups; faceted y axes adjust to each group.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_biomass_B": {
+    "id": "plot_biomass_B",
+    "zh": "生物量 B",
+    "en": "Biomass B",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 总量图显示各组之和；分面图的纵轴按组调整。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. Totals sum across groups; faceted y axes adjust to each group.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_biomass_BA": {
+    "id": "plot_biomass_BA",
+    "zh": "生物量 BA",
+    "en": "Biomass BA",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 总量图显示各组之和；分面图的纵轴按组调整。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. Totals sum across groups; faceted y axes adjust to each group.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_biomass_BL": {
+    "id": "plot_biomass_BL",
+    "zh": "生物量 BL",
+    "en": "Biomass BL",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 总量图显示各组之和；分面图的纵轴按组调整。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. Totals sum across groups; faceted y axes adjust to each group.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_SSB_SSB": {
+    "id": "plot_SSB_SSB",
+    "zh": "产卵生物量 SSB",
+    "en": "Spawning biomass SSB",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 总量图显示各组之和；分面图的纵轴按组调整。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. Totals sum across groups; faceted y axes adjust to each group.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_SSB_SBA": {
+    "id": "plot_SSB_SBA",
+    "zh": "产卵生物量 SBA",
+    "en": "Spawning biomass SBA",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 总量图显示各组之和；分面图的纵轴按组调整。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. Totals sum across groups; faceted y axes adjust to each group.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_SSB_SBL": {
+    "id": "plot_SSB_SBL",
+    "zh": "产卵生物量 SBL",
+    "en": "Spawning biomass SBL",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 总量图显示各组之和；分面图的纵轴按组调整。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. Totals sum across groups; faceted y axes adjust to each group.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_catch_CN": {
+    "id": "plot_catch_CN",
+    "zh": "捕获尾数 CN",
+    "en": "Catch numbers CN",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 捕获尾数是模型推算的渔业捕获，不是调查指数。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. These are model-derived fishery catches, not survey indices.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_catch_CNA": {
+    "id": "plot_catch_CNA",
+    "zh": "捕获尾数 CNA",
+    "en": "Catch numbers CNA",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 捕获尾数是模型推算的渔业捕获，不是调查指数。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. These are model-derived fishery catches, not survey indices.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "plot_catch_CNL": {
+    "id": "plot_catch_CNL",
+    "zh": "捕获尾数 CNL",
+    "en": "Catch numbers CNL",
+    "code": "do.call(fun, list(b, type = typ, se = TRUE, facet_ncol = 3, line_size = 0.6))",
+    "note_zh": "ALSCL 示例；A 表示年龄组，L 表示长度组。有可用标准误时显示近似 95% 区间。 捕获尾数是模型推算的渔业捕获，不是调查指数。",
+    "note_en": "ALSCL example: A denotes age, L length. Approximate 95% intervals appear where standard errors are available. These are model-derived fishery catches, not survey indices.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "recruitment": {
+    "id": "recruitment",
+    "zh": "补充量",
+    "en": "Recruitment",
+    "code": "plot_recruitment(b, se = TRUE)",
+    "note_zh": "补充量对应最小年龄组；受设定的补充年龄和时间步长影响。",
+    "note_en": "Recruitment enters the youngest age class; its interpretation depends on recruitment age and time step.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "SSB_Rec": {
+    "id": "SSB_Rec",
+    "zh": "亲体与补充关系",
+    "en": "Spawning biomass and recruitment",
+    "code": "plot_SSB_Rec(b, age_at_recruitment = 1)",
+    "note_zh": "横轴与补充量错开 1 个观测步长。这里只画散点，不拟合资源补充函数。",
+    "note_en": "Recruitment is shifted by one observation step. This is a scatter plot, not a fitted stock recruitment curve.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "VB": {
+    "id": "VB",
+    "zh": "生长曲线与区间",
+    "en": "Growth curve and interval",
+    "code": "plot_VB(b, age_range = c(1, 15), se = TRUE)",
+    "note_zh": "生长参数在本例中固定，区间退化为曲线；释放参数后区间才反映估计不确定性，不是个体长度分布。",
+    "note_en": "Growth is fixed in this example, so its interval collapses. With estimated growth, intervals reflect parameter uncertainty, not individual length variation.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "pla": {
+    "id": "pla",
+    "zh": "年龄长度转换",
+    "en": "Age length conversion",
+    "code": "plot_pla(b) + scale_x_discrete(labels = as.character(1:15))",
+    "note_zh": "色值是长度组给定年龄的概率；不是增长转移矩阵 G。年龄标签为组序号。",
+    "note_en": "Cells are length-bin probabilities conditional on age, not the growth transition matrix G. Age labels are class indices.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "F_ACL_year": {
+    "id": "F_ACL_year",
+    "zh": "ACL 捕捞死亡率 year",
+    "en": "ACL fishing mortality year",
+    "code": "plot_fishing_mortality(fit, type = typ, se = TRUE, facet_ncol = 4, line_size = 0.6)",
+    "note_zh": "年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。",
+    "note_en": "F is an instantaneous rate per model step. Native F dimensions differ between the models.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "F_ACL_age": {
+    "id": "F_ACL_age",
+    "zh": "ACL 捕捞死亡率 age",
+    "en": "ACL fishing mortality age",
+    "code": "plot_fishing_mortality(fit, type = typ, se = TRUE, facet_ncol = 4, line_size = 0.6)",
+    "note_zh": "年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。",
+    "note_en": "F is an instantaneous rate per model step. Native F dimensions differ between the models.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "F_ACL_length": {
+    "id": "F_ACL_length",
+    "zh": "ACL 捕捞死亡率 length",
+    "en": "ACL fishing mortality length",
+    "code": "plot_fishing_mortality(fit, type = typ, se = TRUE, facet_ncol = 4, line_size = 0.6)",
+    "note_zh": "当前 ACL 的 length 分支与 age 分支相同，仍是年龄曲线，不能作为长度别 F。",
+    "note_en": "In this version, ACL length is an alias of age; the output is still age-specific F.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "F_ALSCL_year": {
+    "id": "F_ALSCL_year",
+    "zh": "ALSCL 捕捞死亡率 year",
+    "en": "ALSCL fishing mortality year",
+    "code": "plot_fishing_mortality(fit, type = typ, se = TRUE, facet_ncol = 4, line_size = 0.6)",
+    "note_zh": "年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。",
+    "note_en": "F is an instantaneous rate per model step. Native F dimensions differ between the models.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "F_ALSCL_age": {
+    "id": "F_ALSCL_age",
+    "zh": "ALSCL 捕捞死亡率 age",
+    "en": "ALSCL fishing mortality age",
+    "code": "plot_fishing_mortality(fit, type = typ, se = TRUE, facet_ncol = 4, line_size = 0.6)",
+    "note_zh": "年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。",
+    "note_en": "F is an instantaneous rate per model step. Native F dimensions differ between the models.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "F_ALSCL_length": {
+    "id": "F_ALSCL_length",
+    "zh": "ALSCL 捕捞死亡率 length",
+    "en": "ALSCL fishing mortality length",
+    "code": "plot_fishing_mortality(fit, type = typ, se = TRUE, facet_ncol = 4, line_size = 0.6)",
+    "note_zh": "年度示例的 F 为每年瞬时率；季度数据得到每季度率。不同模型的原生 F 维度不同。",
+    "note_en": "F is an instantaneous rate per model step. Native F dimensions differ between the models.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "residuals_length": {
+    "id": "residuals_length",
+    "zh": "对数残差 length",
+    "en": "Log residuals length",
+    "code": "plot_residuals(b, type = typ, facet_ncol = 4, x_breaks = if (typ == \"length\") c(2000, 2010, \n    2015) else c(10, 30, 50), line_size = 0.6)",
+    "note_zh": "观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。",
+    "note_en": "Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "residuals_year": {
+    "id": "residuals_year",
+    "zh": "对数残差 year",
+    "en": "Log residuals year",
+    "code": "plot_residuals(b, type = typ, facet_ncol = 4, x_breaks = if (typ == \"length\") c(2000, 2010, \n    2015) else c(10, 30, 50), line_size = 0.6)",
+    "note_zh": "观测对数减预测对数；未经标准差标准化。平滑线用于发现结构，不是显著性检验。",
+    "note_en": "Observed minus fitted log index, without standardization. Smooth curves reveal structure, not significance.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "deviation_R_TRUE": {
+    "id": "deviation_R_TRUE",
+    "zh": "过程偏差 R TRUE",
+    "en": "Process deviations R TRUE",
+    "code": "plot_deviance(b, type = typ, log = lg, se = TRUE, facet_ncol = 3, point_size = 1.2, line_size = 0.5) + \n    scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))",
+    "note_zh": "对数过程偏差以 0 为参照。这不是似然偏差统计量。",
+    "note_en": "Log process deviations use zero as reference; these are not likelihood deviance statistics.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "deviation_R_FALSE": {
+    "id": "deviation_R_FALSE",
+    "zh": "过程偏差 R FALSE",
+    "en": "Process deviations R FALSE",
+    "code": "plot_deviance(b, type = typ, log = lg, se = TRUE, facet_ncol = 3, point_size = 1.2, line_size = 0.5) + \n    scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))",
+    "note_zh": "指数转换后以 1 为参照，区间不对称。这不是原尺度残差。",
+    "note_en": "Exponentiated deviations use one as reference and asymmetric intervals; these are not original-scale residuals.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "deviation_F_TRUE": {
+    "id": "deviation_F_TRUE",
+    "zh": "过程偏差 F TRUE",
+    "en": "Process deviations F TRUE",
+    "code": "plot_deviance(b, type = typ, log = lg, se = TRUE, facet_ncol = 3, point_size = 1.2, line_size = 0.5) + \n    scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))",
+    "note_zh": "对数过程偏差以 0 为参照。这不是似然偏差统计量。",
+    "note_en": "Log process deviations use zero as reference; these are not likelihood deviance statistics.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "deviation_F_FALSE": {
+    "id": "deviation_F_FALSE",
+    "zh": "过程偏差 F FALSE",
+    "en": "Process deviations F FALSE",
+    "code": "plot_deviance(b, type = typ, log = lg, se = TRUE, facet_ncol = 3, point_size = 1.2, line_size = 0.5) + \n    scale_x_continuous(breaks = c(2000, 2010, 2019), expand = expansion(mult = 0.04))",
+    "note_zh": "指数转换后以 1 为参照，区间不对称。这不是原尺度残差。",
+    "note_en": "Exponentiated deviations use one as reference and asymmetric intervals; these are not original-scale residuals.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "ridges": {
+    "id": "ridges",
+    "zh": "长度组成山脊图",
+    "en": "Length composition ridges",
+    "code": "plot_ridges(b)",
+    "note_zh": "每期分别归一化；左为观测，右为拟合。不能由此读出总丰度趋势。需当前会话中的 obj。",
+    "note_en": "Each period is normalized separately: observations left, fit right. This does not show total abundance trends. A live obj is required.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "compare_ts": {
+    "id": "compare_ts",
+    "zh": "种群时间序列比较",
+    "en": "Population time series comparison",
+    "code": "plot_compare_ts(a, b, se = TRUE, ncol = 2)",
+    "note_zh": "只比较共同输出与相同时间窗；自由纵轴不能直接比较不同量的振幅。",
+    "note_en": "Compare common quantities over the same time window. Free y axes preclude amplitude comparisons across quantities.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "compare_F": {
+    "id": "compare_F",
+    "zh": "死亡率矩阵比较",
+    "en": "Fishing mortality matrices",
+    "code": "plot_compare_F(a, b) + scale_x_continuous(breaks = c(2000, 2010, 2019))",
+    "note_zh": "ACL 纵轴是年龄，ALSCL 纵轴是长度；颜色可辅助观察，但两行不逐格对应。",
+    "note_en": "ACL uses age and ALSCL length on the vertical axis; cells do not correspond one to one.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "compare_residuals": {
+    "id": "compare_residuals",
+    "zh": "残差联合诊断",
+    "en": "Combined residual diagnostics",
+    "code": "plot_compare_residuals(a, b, dat)",
+    "note_zh": "包括直方图、QQ 图、年度残差和长度组箱线图。年度误差棒是标准差，不是置信区间。",
+    "note_en": "Includes histograms, QQ plots, annual residuals and length-bin boxplots. Annual error bars represent SD, not confidence intervals.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "compare_growth": {
+    "id": "compare_growth",
+    "zh": "生长与外部参照接口",
+    "en": "Growth and reference-data interface",
+    "code": "growth_display(plot_compare_growth(a, b, age_range = c(1, 15), ref_data = ref, ref_name = \"Synthetic reference\", \n    nls_start = list(Linf = 60, k = 0.2, t0 = 1/60)))",
+    "note_zh": "灰色参照曲线来自模拟 Age 与 Length；不代表论文实测生长。",
+    "note_en": "The reference curve uses synthetic Age and Length data, not empirical measurements from the paper.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "compare_CatL": {
+    "id": "compare_CatL",
+    "zh": "两模型调查拟合",
+    "en": "Survey fits from both models",
+    "code": "plot_compare_CatL(a, b, dat, years = c(2000, 2005, 2010, 2015), ncol = 2)",
+    "note_zh": "显示 4 个指定年份；省略 years 将显示全部年份。点为调查数据，线为拟合中位数。",
+    "note_en": "Four selected years are shown. Omit years to show all periods. Points are observations and curves fitted medians.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "compare_metrics": {
+    "id": "compare_metrics",
+    "zh": "拟合指标比较",
+    "en": "Fit metric comparison",
+    "code": "plot_compare_metrics(a, b, dat, ncol = 2) & scale_y_continuous(expand = expansion(mult = c(0, \n    0.3)))",
+    "note_zh": "当前数据由年龄模型生成。图示差异不能证明任一模型普遍较优；IC 还需要相同数据与似然口径。",
+    "note_en": "The generating model is age based. This comparison cannot establish universal superiority; information criteria also require comparable data and likelihoods.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "compare_selectivity": {
+    "id": "compare_selectivity",
+    "zh": "固定调查可捕性",
+    "en": "Fixed survey catchability",
+    "code": "plot_compare_selectivity(a, b)",
+    "note_zh": "当前函数展示输入 q 的连接线，不是估计的渔业选择性。两模型使用同一输入，曲线重合。",
+    "note_en": "This function connects the input survey q; it does not estimate fishery selectivity. Identical inputs produce overlapping curves.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "compare_F_apical": {
+    "id": "compare_F_apical",
+    "zh": "总体 F 比较 apical",
+    "en": "Summary F comparison apical",
+    "code": "plot_compare_annual_F(a, b, method = method) + labs(title = if (method == \"apical\") \"Apical fishing mortality\" else \"Mean fishing mortality\")",
+    "note_zh": "apical 取最大值，mean 取组间算术平均，均非丰度加权。函数名称含 annual，但不会自动把季度率年化。",
+    "note_en": "Apical is the maximum; mean is an unweighted group average. Despite its name, the function does not annualize quarterly rates.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "compare_F_mean": {
+    "id": "compare_F_mean",
+    "zh": "总体 F 比较 mean",
+    "en": "Summary F comparison mean",
+    "code": "plot_compare_annual_F(a, b, method = method) + labs(title = if (method == \"apical\") \"Apical fishing mortality\" else \"Mean fishing mortality\")",
+    "note_zh": "apical 取最大值，mean 取组间算术平均，均非丰度加权。函数名称含 annual，但不会自动把季度率年化。",
+    "note_en": "Apical is the maximum; mean is an unweighted group average. Despite its name, the function does not annualize quarterly rates.",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "retro_ACL": {
+    "id": "retro_ACL",
+    "zh": "ACL 回溯分析",
+    "en": "ACL retrospective analysis",
+    "code": "plot_retro(retro_a, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)",
+    "note_zh": "",
+    "note_en": "",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "retro_ALSCL": {
+    "id": "retro_ALSCL",
+    "zh": "ALSCL 回溯分析",
+    "en": "ALSCL retrospective analysis",
+    "code": "plot_retro(retro_b, facet_col = 2, rho_digits = 3, rho_size = 3, point_size = 1, line_size = 0.6)",
+    "note_zh": "",
+    "note_en": "",
+    "warnings": [],
+    "status": "PASS"
+  },
+  "truth": {
+    "id": "truth",
+    "zh": "模拟真值与条件估计",
+    "en": "Simulation truth and conditional estimates",
+    "code": "ggplot(estimates, aes(Year, Value, color = Model)) + geom_line() + scale_color_manual(values = setNames(acl_theme(\"compare_colors\"), \n    c(\"ACL\", \"ALSCL\"))) + geom_line(data = truth, aes(Year, Truth), inherit.aes = FALSE, linetype = 2) + \n    facet_wrap(~Quantity, scales = \"free_y\", ncol = 1) + theme_bw() + labs(y = NULL)",
+    "note_zh": "黑虚线为生成真值；固定生物参数，且模拟与拟合的补充过程不同。",
+    "note_en": "Black dashed curves are generating truth. Biology is fixed; recruitment processes differ.",
+    "warnings": [],
+    "status": "PASS"
+  }
+}

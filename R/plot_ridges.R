@@ -11,7 +11,9 @@
 #'   taller ridges, decrease for flatter. Useful when many length bins make proportions
 #'   small (e.g. tuna with 22 bins).
 #' @param palette Character or character vector. Color palette for the fill.
-#'   Built-in palette names: \code{"viridis"} (default), \code{"plasma"},
+#'   Default "viridis" (and NULL) uses a sequential gradient across ordered years,
+#'   independently of the global categorical palette. Also accepts "npg", "aaas", "nejm",
+#'   "lancet", "jama". Gradient palette names: \code{"viridis"}, \code{"plasma"},
 #'   \code{"inferno"}, \code{"cividis"}, \code{"turbo"}, \code{"magma"},
 #'   \code{"ocean"}, \code{"sunset"}, \code{"forest"}, \code{"fire"},
 #'   \code{"spectral"}, \code{"RdYlBu"}, \code{"RdYlGn"}, \code{"PiYG"},
@@ -23,7 +25,7 @@
 #' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
-#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "Arial").
+#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
 #' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
 #' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
@@ -69,6 +71,8 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   logN_at_len <- model_result[["obj"]][["env"]][[".data"]][["logN_at_len"]]
   len_mid <- model_result[["len_mid"]]
   year <- model_result[["year"]]
+  # 两侧按输入时间顺序使用同一渐变 / Share ordered time colors across panels.
+  year_levels <- as.character(year)
   n_years <- length(year)
 
   # --- Build fill scale from palette ---
@@ -100,24 +104,26 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
   # Reshape the data from wide to long format
   df_observed_long <- df_observed %>%
     tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "Abundance")
+  df_observed_long$year <- factor(df_observed_long$year, levels = year_levels)
   df_observed_long$Abundance <- df_observed_long$Abundance * ridges_scale
 
   df_estimated_long <- df_estimated %>%
     tidyr::pivot_longer(-len_mid, names_to = "year", values_to = "Abundance")
+  df_estimated_long$year <- factor(df_estimated_long$year, levels = year_levels)
   df_estimated_long$Abundance <- df_estimated_long$Abundance * ridges_scale
 
   # Plot the data using ggplot2 with ggridges
   p_observed <- ggplot2::ggplot(df_observed_long, aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
     ggridges::geom_ridgeline(alpha = ridges_alpha) +
     fill_scale +
-    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "abundance"), title = if (!is.null(title)) title else .acl_title("CatL_obs_length")) +
+    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = if (!is.null(title)) title else .acl_title("CatL_obs_length")) +
     .acl_scale_x(x_breaks, n_breaks = 8) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
   p_estimated <- ggplot2::ggplot(df_estimated_long, aes(x = len_mid, y = as.factor(year), height = Abundance, fill = as.factor(year))) +
     ggridges::geom_ridgeline(alpha = ridges_alpha) +
     fill_scale +
-    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "abundance"), title = if (!is.null(title)) title else .acl_title("CatL_est_length")) +
+    ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "length"), y = if (!is.null(ylab)) ylab else .acl_lab("y", "year"), title = if (!is.null(title)) title else .acl_title("CatL_est_length")) +
     .acl_scale_x(x_breaks, n_breaks = 8) +
     .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)
 
@@ -134,6 +140,10 @@ plot_ridges <- function(model_result, ridges_alpha = 0.8,
 #' @keywords internal
 .acl_ridges_palette <- function(palette, n) {
 
+  if (is.null(palette)) palette <- "viridis"
+  if (length(palette) == 1 && tolower(palette) %in% c("npg", "aaas", "nejm", "lancet", "jama")) {
+    return(ggplot2::scale_fill_manual(values = .acl_palette(palette, n), guide = "none"))
+  }
   # viridis-family palettes
   viridis_opts <- c("viridis" = "D", "magma" = "A", "inferno" = "B",
                     "plasma" = "C", "cividis" = "E", "turbo" = "H")

@@ -13,7 +13,9 @@ sim_acl(
   parameters.U = NULL,
   map = NULL,
   M = 0.2,
-  ncores = 1
+  ncores = 1,
+  train_times = 1,
+  control = list()
 )
 }
 \arguments{
@@ -34,8 +36,12 @@ sim_acl(
 \item{M}{Numeric, natural mortality (default: 0.2)}
 
 \item{ncores}{Integer. Number of CPU cores to use. 1 = sequential (default).
-On Mac/Linux uses forked processes (mclapply); on Windows uses socket cluster (parLapply).
+Uses socket workers on all platforms.
 Use \code{parallel::detectCores()} to see available cores.}
+
+\item{train_times}{Number of optimization passes per replicate.}
+
+\item{control}{Named nlminb control settings.}
 }
 \value{
 A list containing the results of the stock assessment model.

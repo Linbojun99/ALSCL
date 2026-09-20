@@ -15,7 +15,7 @@ retro_model(
   sel_L50,
   sel_L95,
   model_type = c("acl", "alscl"),
-  growth_step = 1,
+  growth_step = NULL,
   parameters = NULL,
   parameters.L = NULL,
   parameters.U = NULL,
@@ -72,7 +72,7 @@ retro_model(
 
 \item{model_type}{Character. Model to use: \code{"acl"} (default) or \code{"alscl"}.}
 
-\item{growth_step}{Numeric. Growth transition time step for ALSCL. Default is 1. Ignored for ACL.}
+\item{growth_step}{Time step in years. NULL uses recruitment age when below 1, otherwise 1.}
 
 \item{parameters}{Optional custom starting parameter list.}
 

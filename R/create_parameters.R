@@ -81,6 +81,11 @@ create_parameters <- function(model_type = c("acl", "alscl"),
                               parameters.L = NULL,
                               parameters.U = NULL) {
 
+  if (is.null(model_type) || is.list(model_type)) {
+    legacy <- list(parameters = model_type, lower = species, upper = parameters)
+    model_type <- "acl"; species <- NULL
+    parameters <- legacy$parameters; parameters.L <- legacy$lower; parameters.U <- legacy$upper
+  }
   model_type <- match.arg(model_type)
 
   # =========================================================================
@@ -132,7 +137,7 @@ create_parameters <- function(model_type = c("acl", "alscl"),
     if (species == "flatfish") {
       if (model_type == "acl") {
         defaults <- list(
-          log_init_Z     = 0.5,
+          log_init_Z     = log(0.5),
           log_std_log_N0 = log(0.5),
           mean_log_R     = 5,
           log_std_log_R  = log(0.2),
@@ -325,7 +330,7 @@ create_parameters <- function(model_type = c("acl", "alscl"),
     } else if (species == "krill") {
       if (model_type == "acl") {
         defaults <- list(
-          log_init_Z     = 0.5,
+          log_init_Z     = log(0.5),
           log_std_log_N0 = log(1),
           mean_log_R     = 5,
           log_std_log_R  = log(1),
@@ -423,7 +428,7 @@ create_parameters <- function(model_type = c("acl", "alscl"),
     if (model_type == "acl") {
 
       defaults <- list(
-        log_init_Z     = 0.5,
+        log_init_Z     = log(0.5),
         log_std_log_N0 = log(0.5),
         mean_log_R     = 5,
         log_std_log_R  = log(0.2),
@@ -517,6 +522,31 @@ create_parameters <- function(model_type = c("acl", "alscl"),
         log_sigma_index  = log(1.5)
       )
     }
+  }
+
+  if (is.null(species)) {
+    defaults_L$mean_log_R <- -20
+    defaults_U$mean_log_R <- 30
+  }
+  # Bounds exist for every fixed parameter; maps determine which enter nlminb.
+  missing_L <- setdiff(names(defaults), names(defaults_L))
+  missing_U <- setdiff(names(defaults), names(defaults_U))
+  defaults_L[missing_L] <- as.list(rep(-Inf, length(missing_L)))
+  defaults_U[missing_U] <- as.list(rep(Inf, length(missing_U)))
+  for (nm in intersect(c("log_std_log_F", "log_sigma_log_F"), names(defaults))) {
+    defaults_L[[nm]] <- log(.01); defaults_U[[nm]] <- log(5)
+  }
+  for (nm in intersect(c("logit_log_F_y", "logit_log_F_a", "logit_log_F_l"), names(defaults))) {
+    defaults_L[[nm]] <- -20; defaults_U[[nm]] <- 20
+  }
+  if ("t0" %in% names(defaults)) {defaults_L$t0 <- -5; defaults_U$t0 <- 5}
+  if ("log_t0" %in% names(defaults)) {defaults_L$log_t0 <- -20; defaults_U$log_t0 <- log(5)}
+  for (overrides in list(parameters, parameters.L, parameters.U)) {
+    if (!is.null(overrides) && (!is.list(overrides) || (length(overrides) && (is.null(names(overrides)) ||
+        anyDuplicated(names(overrides)) || length(setdiff(names(overrides), names(defaults)))))))
+      stop("Parameter overrides must be named lists of known fixed parameters.")
+    if (any(!vapply(overrides, function(x) is.numeric(x) && length(x) == 1L && !is.na(x), logical(1))))
+      stop("Each parameter or bound must be a numeric scalar.")
   }
 
   # =========================================================================

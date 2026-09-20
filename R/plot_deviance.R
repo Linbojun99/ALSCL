@@ -7,12 +7,12 @@
 #' @param model_result A list from \code{run_acl} or \code{run_alscl}.
 #' @param se Logical, whether to draw the standard error bar.
 #' @param line_size Numeric, the line size.
-#' @param line_color Character, the line color.
+#' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character, the line type.
 #' @param point_color Character. The color of the point. Default is "white".
 #' @param point_size Numeric. The size of the point. Default is 3.
 #' @param point_shape Numeric. The shape of the point. Default is 21.
-#' @param se_color Character, the color of the standard error.
+#' @param se_color Character or NULL. NULL inherits the global se_color setting.
 #' @param se_width Numeric, the width of the standard error.
 #' @param log Logical, whether to keep log scale (TRUE) or apply exp transform (FALSE).
 #' @param facet_ncol Number of columns in facet wrap. Default is NULL.
@@ -22,10 +22,14 @@
 #' @return A ggplot2 object.
 #' @export
 plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color = "white",
-                          point_shape = 21, line_size = 1, line_color = "black",
-                          line_type = "solid", se_color = "black", se_width = 0.5,
+                          point_shape = 21, line_size = 1, line_color = NULL,
+                          line_type = "solid", se_color = NULL, se_width = 0.5,
                           facet_ncol = NULL, facet_scales = "free", log = TRUE,
                           type = c("R", "F")) {
+  # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_color)) line_color <- acl_theme("line_color")
+  if (is.null(se_color)) se_color <- acl_theme("se_color")
+
 
   type <- match.arg(type)
 
@@ -33,7 +37,7 @@ plot_deviance <- function(model_result, se = TRUE, point_size = 3, point_color =
   is_alscl <- is.null(model_result[["report"]][["F"]]) && !is.null(model_result[["report"]][["FL"]])
 
   # Get theme
-  current_theme <- tryCatch(get("acl_get_theme", envir = asNamespace("ACL"))(), error = function(e) ggplot2::theme_minimal())
+  current_theme <- tryCatch(get("acl_get_theme", envir = asNamespace("ALSCL"))(), error = function(e) ggplot2::theme_minimal())
 
   # ==============================================================
   # Type = "R": Recruitment deviations (same for ACL and ALSCL)

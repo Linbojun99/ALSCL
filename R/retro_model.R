@@ -17,7 +17,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 #' @param sel_L50 The length at 50 percent selectivity.
 #' @param sel_L95 The length at 95 percent selectivity.
 #' @param model_type Character. Model to use: `"acl"` (default) or `"alscl"`.
-#' @param growth_step Numeric. Growth transition time step for ALSCL. Default is 1. Ignored for ACL.
+#' @param growth_step Time step in years. NULL uses recruitment age when below 1, otherwise 1.
 #' @param parameters Optional custom starting parameter list.
 #' @param parameters.L Optional lower bounds for parameters.
 #' @param parameters.U Optional upper bounds for parameters.
@@ -64,7 +64,7 @@ utils::globalVariables(c("Variable", "RetrospectiveYear"))
 retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rec.age, nage, M, sel_L50, sel_L95,
                         model_type = c("acl", "alscl"),
-                        growth_step = 1,
+                        growth_step = NULL,
                         parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                         map = NULL, len_mid = NULL, len_border = NULL,
                         len_lower = NULL, len_upper = NULL,
@@ -80,6 +80,9 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         rho_digits = 4, rho_position = "top_right", rho_size = 3.5) {
 
   model_type <- match.arg(model_type)
+  nyear <- .acl_positive_integer(nyear, "nyear")
+  ncores <- .acl_positive_integer(ncores, "ncores")
+  if (nyear > ncol(data.CatL)-3L) stop("Every retrospective peel must retain at least two time steps.")
 
   if (silent) {
     sink(tempfile())
@@ -94,7 +97,7 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
               parameters = parameters, parameters.L = parameters.L,
               parameters.U = parameters.U, map = map,
               len_mid = len_mid, len_border = len_border,
-              train_times = train_times, silent = TRUE)
+              train_times = train_times, growth_step = growth_step, silent = TRUE)
     } else {
       run_alscl(data.CatL = CatL_sub, data.wgt = wgt_sub, data.mat = mat_sub,
                 rec.age = rec.age, nage = nage, M = M,
@@ -182,12 +185,14 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
     peel_results <- lapply(1:nyear, .fit_one_peel)
   } else {
     cat(sprintf("Running %d retrospective peels on %d cores", nyear, ncores_use))
-    if (.Platform$OS.type == "unix") {
-      cat(" [fork: mclapply]...\n")
-      peel_results <- parallel::mclapply(1:nyear, .fit_one_peel, mc.cores = ncores_use)
-    } else {
+    {
       cat(" [socket: parLapply]...\n")
       cl <- parallel::makeCluster(ncores_use)
+      on.exit(parallel::stopCluster(cl), add = TRUE)
+      cache <- dirname(dirname(.acl_compile(toupper(model_type))$cpp_path))
+      parallel::clusterCall(cl, function(paths, cache) {
+        .libPaths(paths); options(ALSCL.tmb.cache = cache); NULL
+      }, .libPaths(), cache)
       parallel::clusterExport(cl, varlist = c(
         "data.CatL", "data.wgt", "data.mat",
         "rec.age", "nage", "M", "sel_L50", "sel_L95",
@@ -202,7 +207,6 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
         library(ALSCL)
       })
       peel_results <- parallel::parLapply(cl, 1:nyear, .fit_one_peel)
-      parallel::stopCluster(cl)
     }
   }
 
@@ -221,7 +225,9 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
                         pr$peel, variable_name))
         next
       }
-      rho <- mean((as.numeric(v) - original_values) / original_values)
+      terminal <- length(v)
+      rho <- if (is.finite(original_values[terminal]) && original_values[terminal] != 0)
+        (as.numeric(v)[terminal] - original_values[terminal]) / original_values[terminal] else NA_real_
       temp <- data.frame(
         Year              = year2,
         Variable          = rep(variable_name, length(year2)),
@@ -247,12 +253,12 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 
   xpos <- min(results$Year) + (max(results$Year) - min(results$Year)) / 5
 
+  # One terminal-year relative difference per peel, with equal peel weights.
   rho_text <- results %>%
+    dplyr::filter(!is.na(Rho)) %>%
+    dplyr::distinct(Variable, RetrospectiveYear, Rho) %>%
     dplyr::group_by(Variable) %>%
-    dplyr::filter(RetrospectiveYear == min(as.numeric(as.character(RetrospectiveYear)), na.rm = TRUE)) %>%
-    dplyr::filter(Year == max(Year, na.rm = TRUE)) %>%
-    dplyr::summarise(Rho = dplyr::first(Rho), Year = xpos) %>%
-    dplyr::ungroup()
+    dplyr::summarise(Rho = mean(Rho), Year = xpos, .groups = "drop")
 
   last_points <- results %>%
     dplyr::group_by(Variable, RetrospectiveYear) %>%
@@ -296,14 +302,15 @@ retro_model <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param sel_L95 Length at 95 percent selectivity.
 #' @param ... Additional arguments passed to [retro_model()].
 #' @return A list. See [retro_model()].
+#' @inheritParams retro_model
 #' @seealso [retro_model()], [retro_alscl()], [plot_retro()]
 #' @export
-retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
-                      rec.age, nage, M, sel_L50, sel_L95, ...) {
-  retro_model(nyear = nyear, data.CatL = data.CatL, data.wgt = data.wgt,
-              data.mat = data.mat, rec.age = rec.age, nage = nage, M = M,
-              sel_L50 = sel_L50, sel_L95 = sel_L95,
-              model_type = "acl", ...)
+retro_acl <- function(nyear = 5, data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, sel_L95,
+                      parameters = NULL, parameters.L = NULL, parameters.U = NULL,
+                      map = NULL, len_mid = NULL, len_border = NULL, plot = FALSE,
+                      line_size = 1.2, point_size=3,point_shape=21,facet_scales = "free", facet_col = NULL, facet_row = NULL,train_times=1, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL, rho_digits = 4, rho_position = "top_right", rho_size = 3.5, ncores = 1, ...) {
+  args <- mget(setdiff(names(formals(retro_acl)), "..."), envir = environment())
+  do.call(retro_model, c(args, list(model_type = "acl"), list(...)))
 }
 
 
@@ -364,6 +371,10 @@ retro_alscl <- function(nyear = 5, data.CatL, data.wgt, data.mat,
 #' @param base_theme Character or NULL. Base ggplot2 theme name.
 #' @param title_hjust Numeric or NULL. Title horizontal alignment.
 #' @return A ggplot object.
+#' @param palette Character or NULL. ggsci palette name; NULL inherits acl_theme().
+#'   Native colors are interpolated when there are more peels than colors.
+#' @param colors Character vector or NULL. Explicit period colors, ordered by
+#'   descending terminal period or named by terminal period. Overrides palette.
 #' @export
 #' @examples
 #' \dontrun{
@@ -382,11 +393,29 @@ plot_retro <- function(retro_result,
                        font_family = NULL, title_size = NULL,
                        axis_title_size = NULL, axis_text_size = NULL,
                        strip_text_size = NULL, legend_text_size = NULL,
-                       x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
+                       x_breaks = NULL, base_theme = NULL, title_hjust = NULL, palette = NULL, colors = NULL) {
 
   results     <- retro_result$results
   rho_text    <- retro_result$rho_text
   last_points <- retro_result$last_points
+
+  # 截止期排序固定颜色映射 / Stable color mapping by terminal period.
+  periods <- sort(unique(as.character(results$RetrospectiveYear)), decreasing = TRUE)
+  numeric_periods <- suppressWarnings(as.numeric(periods))
+  if (all(is.finite(numeric_periods))) periods <- periods[order(numeric_periods, decreasing = TRUE)]
+  if (is.null(colors)) {
+    colors <- stats::setNames(.acl_palette(palette %||% acl_theme("palette"), length(periods)), periods)
+  } else {
+    if (length(colors) < length(periods)) stop("colors must cover every retrospective period.")
+    if (!is.null(names(colors))) {
+      if (!all(periods %in% names(colors))) stop("Named colors must include every retrospective period.")
+      colors <- colors[periods]
+    } else colors <- stats::setNames(colors[seq_along(periods)], periods)
+    if (anyNA(colors)) stop("colors must not contain missing values.")
+    grDevices::col2rgb(colors)
+  }
+  results$RetrospectiveYear <- factor(results$RetrospectiveYear, levels = periods)
+  last_points$RetrospectiveYear <- factor(last_points$RetrospectiveYear, levels = periods)
 
   x_min <- min(results$Year, na.rm = TRUE)
   x_max <- max(results$Year, na.rm = TRUE)
@@ -418,6 +447,7 @@ plot_retro <- function(retro_result,
                                               color = RetrospectiveYear,
                                               group = RetrospectiveYear)) +
     ggplot2::geom_line(linewidth = line_size) +
+    ggplot2::scale_color_manual(values = colors, breaks = periods) +
     ggplot2::geom_point(data = last_points, size = point_size, shape = point_shape) +
     ggplot2::facet_wrap(~Variable, scales = facet_scales, ncol = facet_col, nrow = facet_row) +
     .acl_scale_x(x_breaks, n_breaks = 10) +
@@ -426,7 +456,7 @@ plot_retro <- function(retro_result,
                     base_theme = base_theme, title_hjust = title_hjust) +
     ggplot2::theme(legend.position = "bottom") +
     ggplot2::labs(x = if (!is.null(xlab)) xlab else .acl_lab("x", "year"),
-                  y = "Value", color = "Retrospective Year",
+                  y = if (!is.null(ylab)) ylab else "Value", color = "Retrospective Year",
                   title = if (!is.null(title)) title else auto_title)
 
   p <- p + ggplot2::geom_text(

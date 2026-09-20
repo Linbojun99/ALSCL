@@ -14,8 +14,8 @@
 #'
 #' @param bio_vars A list from \code{sim_cal()} containing biological variables.
 #' @param params A list from \code{initialize_params()} containing parameters.
-#' @param sim_year Integer, total number of simulation years (default: 100).
-#' @param output_dir Character, directory for saving results (default: tempdir()).
+#' @param sim_year Total simulation years; NULL uses params$nyear.
+#' @param output_dir Directory for saving results (default: current directory).
 #' @param iter_range Integer vector, which iterations (seeds) to run (default: 4:100).
 #' @param return_iter Integer or NULL, which iteration to return in memory.
 #'
@@ -23,9 +23,15 @@
 #'   (post-burn-in), including SN_at_len, N_at_len, N_at_age, SSB, etc.
 #'
 #' @export
-sim_data <- function(bio_vars, params, sim_year = 100,
+sim_data <- function(bio_vars, params, sim_year = NULL,
                      output_dir = ".", iter_range = 4:100, return_iter = NULL) {
 
+  if (is.null(sim_year)) sim_year <- params$nyear
+  sim_year <- .acl_positive_integer(sim_year, "sim_year", 2L)
+  if (!is.numeric(iter_range) || !length(iter_range) || anyNA(iter_range) ||
+      any(iter_range < 0 | iter_range != floor(iter_range))) stop("iter_range must contain nonnegative integer seeds.")
+  if (params$burn_in < 0 || params$burn_in >= sim_year) stop("burn_in must be nonnegative and smaller than sim_year.")
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
   # Determine model type from bio_vars (set by sim_cal)
   model_type <- if (!is.null(bio_vars$model_type)) bio_vars$model_type else "age_based"
 
@@ -68,6 +74,11 @@ sim_data <- function(bio_vars, params, sim_year = 100,
   R_ar    <- if (!is.null(params$R_ar))   params$R_ar   else 0.1
   burn_in <- if (!is.null(params$burn_in)) params$burn_in else 80
 
+  step <- if (is.null(params$growth_step)) 1 else params$growth_step
+  steps_per_year <- round(1/step)
+  if (steps_per_year < 1L || abs(steps_per_year*step-1)>1e-8) stop("The simulator requires a time step that divides one year.")
+  sim_year <- sim_year*steps_per_year
+  burn_in <- burn_in*steps_per_year
   # Observation window indices
   obs_start <- burn_in + 1
   obs_end   <- sim_year
@@ -88,7 +99,6 @@ sim_data <- function(bio_vars, params, sim_year = 100,
     Rec <- exp(log(R_init) + dev_logR)
 
     # --- Fishing mortality (AR1) ---
-    set.seed(iter)
     F_yr <- F_mean * exp(arima.sim(list(order = c(1, 0, 0), ar = F_ar), n = sim_year) * F_sd)
 
     Z_at_age <- matrix(NA, nrow = sim_year, ncol = nage)
@@ -100,7 +110,6 @@ sim_data <- function(bio_vars, params, sim_year = 100,
     }
 
     # --- Initial age structure ---
-    set.seed(iter)
     N0_at_age <- rep(NA, nage)
     dev_logN0 <- rnorm(nage - 1, 0, std_logN0)
     N0_at_age[1] <- Rec[1]
@@ -133,7 +142,7 @@ sim_data <- function(bio_vars, params, sim_year = 100,
       N_at_age[i, 1] <- Rec[i]
 
       # Survival (ages 2 to nage-1)
-      for (j in 2:(nage - 1)) {
+      if (nage > 2L) for (j in 2:(nage - 1)) {
         N_at_age[i, j] <- N_at_age[i - 1, j - 1] * exp(-Z_at_age[i - 1, j - 1])
       }
       # Plus group
@@ -164,10 +173,10 @@ sim_data <- function(bio_vars, params, sim_year = 100,
     # --- Survey index ---
     RVN_at_len <- matrix(NA, nrow = sim_year, ncol = nlen)
     RVB_at_len <- matrix(NA, nrow = sim_year, ncol = nlen)
-    set.seed(iter)
-    surv_error <- rnorm(sim_year, 0, std_SN)
+    surv_error <- matrix(rnorm(sim_year * nlen, 0, std_SN), sim_year, nlen)
+    if (identical(params$observation_error, "shared_time")) surv_error[,] <- surv_error[,1L]
     for (i in 1:sim_year) {
-      RVN_at_len[i, ] <- N_at_len[i, ] * q_surv * exp(surv_error[i])
+      RVN_at_len[i, ] <- N_at_len[i, ] * q_surv * exp(surv_error[i, ])
       RVB_at_len[i, ] <- RVN_at_len[i, ] * W_at_len
     }
     # Floor small values
@@ -180,6 +189,9 @@ sim_data <- function(bio_vars, params, sim_year = 100,
       SN_at_len  = RVN_at_len[idx, ],
       q_surv     = q_surv,
       len_mid    = len_mid,
+      len_border = params$len_border[-c(1L, length(params$len_border))],
+      rec.age = params$rec.age, growth_step = params$growth_step,
+      q_surv_L50 = params$q_surv_L50, q_surv_L95 = params$q_surv_L95,
       nyear      = nyear_obs,
       nage       = nage,
       nlen       = nlen,
@@ -259,6 +271,8 @@ sim_data <- function(bio_vars, params, sim_year = 100,
 
   # Quarterly time steps: total number of steps
   steps_per_year <- round(1 / growth_step)
+  if (steps_per_year < 1L || abs(steps_per_year * growth_step - 1) > 1e-8)
+    stop("The length-based simulator requires a time step that divides one year.")
   nstep <- sim_year * steps_per_year
 
   # Observation window (in quarterly steps)
@@ -281,7 +295,6 @@ sim_data <- function(bio_vars, params, sim_year = 100,
     Rec <- exp(log(R_init) + dev_logR)
 
     # --- Length-dependent fishing mortality (AR1) ---
-    set.seed(iter)
     F_yr <- F_mean * exp(arima.sim(list(order = c(1, 0, 0), ar = F_ar), n = nstep) * F_sd)
 
     Z_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
@@ -293,7 +306,6 @@ sim_data <- function(bio_vars, params, sim_year = 100,
     }
 
     # --- Initial age structure ---
-    set.seed(iter)
     N0_at_age <- rep(NA, nage)
     dev_logN0 <- rnorm(nage - 1, 0, std_logN0)
     N0_at_age[1] <- Rec[1]
@@ -347,7 +359,7 @@ sim_data <- function(bio_vars, params, sim_year = 100,
       cbla[, 1] <- cnla[, 1] * W_at_len
 
       # Ages 2 to nage-1: survive + grow via Gij
-      for (j in 2:(nage - 1)) {
+      if (nage > 2L) for (j in 2:(nage - 1)) {
         nla_survival <- nla_list[[i - 1]][, j - 1] * exp(-Z_at_len[i - 1, ])
         nla[, j]  <- Gij %*% nla_survival
         bla[, j]  <- nla[, j] * W_at_len
@@ -400,11 +412,11 @@ sim_data <- function(bio_vars, params, sim_year = 100,
     # --- Survey index (3D-aware, like M6 original) ---
     RVN_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
     RVB_at_len <- matrix(NA, nrow = nstep, ncol = nlen)
-    set.seed(iter)
-    surv_error <- rnorm(nstep, 0, std_SN)
+    surv_error <- matrix(rnorm(nstep * nlen, 0, std_SN), nstep, nlen)
+    if (identical(params$observation_error, "shared_time")) surv_error[,] <- surv_error[,1L]
     for (i in 1:nstep) {
       # Apply q_surv to each age column, then sum across ages
-      rvnla <- nla_list[[i]] * q_surv * exp(surv_error[i])
+      rvnla <- nla_list[[i]] * q_surv * exp(surv_error[i, ])
       RVN_at_len[i, ] <- rowSums(rvnla)
       RVB_at_len[i, ] <- RVN_at_len[i, ] * W_at_len
     }
@@ -418,6 +430,9 @@ sim_data <- function(bio_vars, params, sim_year = 100,
       SN_at_len  = RVN_at_len[idx, ],
       q_surv     = q_surv,
       len_mid    = len_mid,
+      len_border = params$len_border[-c(1L, length(params$len_border))],
+      rec.age = params$rec.age, growth_step = params$growth_step,
+      q_surv_L50 = params$q_surv_L50, q_surv_L95 = params$q_surv_L95,
       nyear      = nstep_obs,              # number of time steps in obs window
       nage       = nage,
       nlen       = nlen,

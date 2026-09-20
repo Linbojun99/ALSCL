@@ -8,7 +8,7 @@ plot_SSB_Rec(
   model_result,
   age_at_recruitment = 1,
   point_size = 2,
-  point_color = "black",
+  point_color = NULL,
   point_shape = 16,
   return_data = FALSE,
   title = NULL,
@@ -32,7 +32,7 @@ plot_SSB_Rec(
 
 \item{point_size}{Numeric. The size of the points in the scatter plot. Default is 2.}
 
-\item{point_color}{Character. The color of the points in the scatter plot. Default is "black".}
+\item{point_color}{Character or NULL. NULL inherits the global point_color setting.}
 
 \item{point_shape}{Numeric. The shape of the points in the scatter plot, as an integer value (see ?points in base R for more info). Default is 16 (filled circle).}
 
@@ -44,7 +44,7 @@ plot_SSB_Rec(
 
 \item{ylab}{Character or NULL. Custom y-axis label. If NULL, uses global theme setting.}
 
-\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "Arial").}
+\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 
 \item{title_size}{Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).}
 

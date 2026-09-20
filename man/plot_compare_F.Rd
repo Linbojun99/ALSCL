@@ -9,7 +9,7 @@ plot_compare_F(
   model2,
   model1_name = NULL,
   model2_name = NULL,
-  palette = "inferno"
+  palette = NULL
 )
 }
 \arguments{
@@ -19,7 +19,7 @@ plot_compare_F(
 
 \item{model1_name, model2_name}{Character. Labels. Auto-detected if NULL.}
 
-\item{palette}{Character. viridis palette. Default "inferno".}
+\item{palette}{Character or NULL. NULL uses the global sequential colors; a ggsci palette name or a viridis option overrides them.}
 }
 \value{
 A ggplot object.

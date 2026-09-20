@@ -86,6 +86,10 @@ simulate_example_data <- function(years      = 2000:2025,
 
   if (!is.null(seed)) set.seed(seed)
 
+  if (length(years) < 2L || any(!is.finite(years)) || any(diff(years) <= 0)) stop("Provide at least two increasing observation years.")
+  nage <- .acl_positive_integer(nage, "nage", 2L)
+  .acl_scalar(cv_catch, "cv_catch", 0)
+  if (t0 >= 1) stop("t0 must be below the recruitment age of 1.")
   nY  <- length(years)
   bin_breaks <- sort(unique(bin_breaks))
   nL  <- length(bin_breaks) - 1
@@ -160,9 +164,9 @@ simulate_example_data <- function(years      = 2000:2025,
   for (y in seq_len(nY)) {
     Fy <- F_trend[y]
     Z  <- M + Fy
-    C_a <- N[, y] * (Fy / Z) * (1 - exp(-Z))
-    C_L <- as.numeric(pla %*% C_a) * sel_L
-    noise <- exp(stats::rnorm(nL, -0.5 * cv_catch^2, cv_catch))
+    # Survey index observes abundance, not fishery removals.
+    C_L <- as.numeric(pla %*% N[, y]) * sel_L
+    noise <- exp(stats::rnorm(nL, 0, sqrt(log1p(cv_catch^2))))
     C_L <- C_L * noise
     CatL_mat[, y] <- pmax(round(C_L, 2), 0)
   }
@@ -200,7 +204,8 @@ simulate_example_data <- function(years      = 2000:2025,
     mean_F = mean_F, F_trend = F_trend,
     log_rec = log_rec, cv_catch = cv_catch,
     rec_sigma = rec_sigma, seed = seed,
-    bin_breaks = bin_breaks
+    bin_breaks = bin_breaks, N_at_age = N, N_at_len = pla %*% N,
+    cv_len = cv_len, observation_log_sd = sqrt(log1p(cv_catch^2))
   )
 
   result <- list(

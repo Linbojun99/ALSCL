@@ -34,7 +34,9 @@ taller ridges, decrease for flatter. Useful when many length bins make proportio
 small (e.g. tuna with 22 bins).}
 
 \item{palette}{Character or character vector. Color palette for the fill.
-Built-in palette names: \code{"viridis"} (default), \code{"plasma"},
+Default "viridis" (and NULL) uses a sequential gradient across ordered years,
+independently of the global categorical palette. Also accepts "npg", "aaas", "nejm",
+"lancet", "jama". Gradient palette names: \code{"viridis"}, \code{"plasma"},
 \code{"inferno"}, \code{"cividis"}, \code{"turbo"}, \code{"magma"},
 \code{"ocean"}, \code{"sunset"}, \code{"forest"}, \code{"fire"},
 \code{"spectral"}, \code{"RdYlBu"}, \code{"RdYlGn"}, \code{"PiYG"},
@@ -49,7 +51,7 @@ which will be interpolated to match the number of years.}
 
 \item{ylab}{Character or NULL. Custom y-axis label. If NULL, uses global theme setting.}
 
-\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "Arial").}
+\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 
 \item{title_size}{Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).}
 

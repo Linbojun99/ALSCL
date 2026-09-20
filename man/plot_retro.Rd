@@ -26,7 +26,9 @@ plot_retro(
   legend_text_size = NULL,
   x_breaks = NULL,
   base_theme = NULL,
-  title_hjust = NULL
+  title_hjust = NULL,
+  palette = NULL,
+  colors = NULL
 )
 }
 \arguments{
@@ -73,6 +75,12 @@ plot_retro(
 \item{base_theme}{Character or NULL. Base ggplot2 theme name.}
 
 \item{title_hjust}{Numeric or NULL. Title horizontal alignment.}
+
+\item{palette}{Character or NULL. ggsci palette name; NULL inherits acl_theme().
+Native colors are interpolated when there are more peels than colors.}
+
+\item{colors}{Character vector or NULL. Explicit period colors, ordered by
+descending terminal period or named by terminal period. Overrides palette.}
 }
 \value{
 A ggplot object.

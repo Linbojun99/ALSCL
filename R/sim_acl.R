@@ -12,152 +12,57 @@
 #' @param map A list containing the custom values for the map elements (default is NULL).
 #' @param M Numeric, natural mortality (default: 0.2)
 #' @param ncores Integer. Number of CPU cores to use. 1 = sequential (default).
-#'   On Mac/Linux uses forked processes (mclapply); on Windows uses socket cluster (parLapply).
+#'   Uses socket workers on all platforms.
 #'   Use \code{parallel::detectCores()} to see available cores.
 #'
 #' @return A list containing the results of the stock assessment model.
 #' @export
+#' @param train_times Number of optimization passes per replicate.
+#' @param control Named nlminb control settings.
 sim_acl <- function(iter_range = 4:100, sim_data_path = ".", output_dir = ".",
                     parameters = NULL, parameters.L = NULL, parameters.U = NULL,
-                    map = NULL, M = 0.2, ncores = 1) {
-
-  # Compile DLL first (once, in main process)
-  acl_info <- compile_and_load_acl()
-  acl_dll_path <- acl_info$dll_path
-  unload_acl(acl_dll_path)
-
-  # Pre-compute shared parameter objects
-  custom_bounds_and_params <- create_parameters(parameters, parameters.L, parameters.U)
-  map_fixed <- generate_map(map)
-
-  # --- Worker function: fits one iteration ---
-  .fit_one_iter <- function(iter) {
-    # Load simulation data
-    sim.data <- NULL
-    load(file.path(sim_data_path, paste0("sim_rep", iter)))
-
-    na_matrix <- t(matrix(1, nrow = nrow(sim.data$SN_at_len), ncol = ncol(sim.data$SN_at_len)))
-    na_matrix[which(sim.data$SN_at_len[, ] == 0)] <- 0
-
-    tmb.data <- list(
-      logN_at_len = t(log(sim.data$SN_at_len)),
-      log_q       = log(sim.data$q_surv),
-      len_border  = (sim.data$len_mid + 1)[1:(sim.data$nlen - 1)],
-      na_matrix   = na_matrix,
-      age         = sim.data$ages,
-      Y           = sim.data$nyear,
-      A           = sim.data$nage,
-      L           = sim.data$nlen,
-      weight      = sim.data$weight,
-      mat         = sim.data$mat,
-      M           = M
-    )
-
-    # Set up parameters (fresh copy for each worker)
-    params_local <- custom_bounds_and_params$parameters
-    params_local$dev_log_R  <- rep(0, sim.data$nyear)
-    params_local$dev_log_F  <- array(0, c(sim.data$nage, sim.data$nyear))
-    params_local$dev_log_N0 <- rep(0, (sim.data$nage - 1))
-
-    lower <- unlist(custom_bounds_and_params$parameters.L)
-    upper <- unlist(custom_bounds_and_params$parameters.U)
-
-    rnames <- c("dev_log_R", "dev_log_F", "dev_log_N0")
-
-    # Load DLL in this worker
-    if (!is.loaded("ACL")) {
-      dyn.load(acl_dll_path)
-    }
-
+                    map = NULL, M = 0.2, ncores = 1, train_times = 1, control = list()) {
+  ncores <- .acl_positive_integer(ncores, "ncores")
+  if (!length(iter_range)) stop("iter_range must not be empty.")
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+  info <- .acl_compile("ACL")
+  cache <- dirname(dirname(info$cpp_path))
+  fit_one <- function(iter) {
     tryCatch({
-      t_iter <- proc.time()
-      obj <- TMB::MakeADFun(tmb.data, params_local, random = rnames, map = map_fixed,
-                            DLL = "ACL", inner.control = list(trace = FALSE, maxit = 500),
-                            silent = TRUE)
-
-      opt <- nlminb(obj$par, obj$fn, obj$gr, lower = lower, upper = upper,
-                    control = list(trace = 0, iter.max = 2000, eval.max = 10000))
-
-      report <- obj$report()
-      bound_check <- c((as.vector(opt$par) - as.vector(lower)),
-                       (as.vector(upper) - as.vector(opt$par)))
-      bound_hit <- min(bound_check) == 0
-
-      sdresult <- TMB::sdreport(obj)
-      est_std <- summary(sdresult)
-
-      t_iter_elapsed <- (proc.time() - t_iter)[["elapsed"]]
-
-      year <- 1:sim.data$nyear
-      result <- list(obj = obj, opt = opt, report = report, est_std = est_std,
-                     len_mid = sim.data$len_mid, year = year,
-                     bound_hit = bound_hit, bound_check = bound_check,
-                     converge = opt$message)
-
-      # Save to disk
-      save(result, file = file.path(output_dir, paste0("result_rep_", iter)))
-
-      cat(sprintf("  iter %d: %s | boundary: %s | %.1f sec\n", iter, opt$message, bound_hit, t_iter_elapsed))
-      return(result)
-
-    }, error = function(e) {
-      cat(sprintf("  iter %d: ERROR - %s\n", iter, conditionMessage(e)))
-      return(list(converge = "FAILED", error = conditionMessage(e), iter = iter))
-    }, finally = {
-      if (is.loaded("ACL")) {
-        dyn.unload(acl_dll_path)
+      e <- new.env(parent = emptyenv())
+      load(file.path(sim_data_path, paste0("sim_rep", iter)), envir = e)
+      s <- e$sim.data
+      if (is.null(s)) stop("Simulation file does not contain sim.data.")
+      step <- if (!is.null(s$growth_step)) s$growth_step else if(length(s$ages)>1) diff(s$ages)[1] else 1
+      to_frame <- function(x) {
+        out <- data.frame(LengthBin = as.character(s$len_mid), x, check.names = FALSE)
+        names(out) <- c("LengthBin", as.character(seq.int(0L,s$nyear-1L)*step+2000))
+        out
       }
-    })
+      L50 <- s$q_surv_L50; L95 <- s$q_surv_L95
+      if (is.null(L50) || is.null(L95)) {
+        valid <- is.finite(s$q_surv) & s$q_surv > 0 & s$q_surv < 1
+        if (sum(valid)<2L) stop("Simulation requires logistic survey catchability metadata.")
+        coefficients <- stats::coef(stats::lm(stats::qlogis(s$q_surv[valid]) ~ s$len_mid[valid]))
+        L50 <- -coefficients[1]/coefficients[2]; L95 <- L50+log(19)/coefficients[2]
+      }
+      result <- run_acl(to_frame(t(s$SN_at_len)), to_frame(s$weight), to_frame(s$mat),
+        rec.age = s$ages[1], nage = s$nage, M = M, sel_L50 = unname(L50), sel_L95 = unname(L95),
+        parameters = parameters, parameters.L = parameters.L, parameters.U = parameters.U,
+        map = map, len_mid = s$len_mid, len_border = s$len_border,
+        growth_step = step, train_times = train_times, control = control, silent = TRUE)
+      save(result, file = file.path(output_dir, paste0("result_rep_", iter)))
+      result
+    }, error = function(e) list(converge = "FAILED", error = conditionMessage(e), iter = iter))
   }
-
-  # --- Dispatch: sequential vs parallel ---
   ncores <- min(ncores, length(iter_range))
-  t_total <- proc.time()
-
-  if (ncores <= 1) {
-    # Sequential
-    cat(sprintf("Running %d iterations sequentially...\n", length(iter_range)))
-    result_list <- lapply(iter_range, .fit_one_iter)
-
-  } else {
-    cat(sprintf("Running %d iterations on %d cores", length(iter_range), ncores))
-
-    if (.Platform$OS.type == "unix") {
-      # macOS / Linux: fork-based (mclapply)
-      cat(" [fork: mclapply]...\n")
-      result_list <- parallel::mclapply(iter_range, .fit_one_iter, mc.cores = ncores)
-
-    } else {
-      # Windows: socket-based (parLapply)
-      cat(" [socket: parLapply]...\n")
-      cl <- parallel::makeCluster(ncores)
-
-      # Export everything workers need
-      parallel::clusterExport(cl, varlist = c(
-        "sim_data_path", "output_dir", "M", "acl_dll_path",
-        "custom_bounds_and_params", "map_fixed",
-        ".fit_one_iter"
-      ), envir = environment())
-
-      # Load packages on each worker
-      parallel::clusterEvalQ(cl, {
-        library(TMB)
-        library(ALSCL)
-      })
-
-      result_list <- parallel::parLapply(cl, iter_range, .fit_one_iter)
-      parallel::stopCluster(cl)
-    }
+  if (ncores == 1L) results <- lapply(iter_range, fit_one) else {
+    cl <- parallel::makeCluster(ncores); on.exit(parallel::stopCluster(cl), add = TRUE)
+    parallel::clusterCall(cl, function(paths, cache) {
+      .libPaths(paths); loadNamespace("ALSCL"); options(ALSCL.tmb.cache = cache); NULL
+    }, .libPaths(), cache)
+    results <- parallel::parLapply(cl, iter_range, fit_one)
   }
-
-  t_total_elapsed <- (proc.time() - t_total)[["elapsed"]]
-
-  # Name the results
-  names(result_list) <- paste0("result_rep_", iter_range)
-
-  n_success <- sum(sapply(result_list, function(x) !identical(x$converge, "FAILED")))
-  cat(sprintf("\n=== sim_acl complete: %d/%d succeeded | %.1f sec (%.1f min) ===\n",
-              n_success, length(iter_range), t_total_elapsed, t_total_elapsed / 60))
-
-  return(result_list)
+  names(results) <- paste0("result_rep_", iter_range)
+  results
 }

@@ -1,0 +1,31 @@
+test_that("simulation uses consistent age units and independent survey errors by default", {
+  p<-initialize_params(species="flatfish",nyear=10,burn_in=5)
+  expect_equal(initialize_params(100,1,2020,15)$nage,15)
+  b<-sim_cal(p);s<-sim_data(b,p,iter_range=4,output_dir=tempdir())
+  expect_equal(dim(s$SN_at_len),c(5L,b$nlen));expect_true(all(is.finite(s$SN_at_len)))
+  error<-log(s$SN_at_len / sweep(s$N_at_len,2,s$q_surv,"*"))
+  expect_gt(stats::sd(error[1,]),.01)
+  p$observation_error<-"shared_time";shared<-sim_data(b,p,iter_range=4,output_dir=tempdir())
+  error<-log(shared$SN_at_len / sweep(shared$N_at_len,2,shared$q_surv,"*"))
+  valid<-shared$SN_at_len[1,]>1e-5
+  expect_lt(diff(range(error[1,valid])),1e-10)
+  expect_error(sim_data(b,p,sim_year=3,iter_range=4,output_dir=tempdir()),"burn_in")
+  p<-initialize_params(species="tuna",nyear=5,burn_in=3)
+  b<-sim_cal(p);s<-sim_data(b,p,iter_range=4,output_dir=tempdir())
+  expect_equal(s$nyear,8);expect_equal(s$ages,seq(.25,5,.25))
+  expect_equal(colSums(b$Gij),rep(1,b$nlen),tolerance=1e-12)
+})
+test_that("example observations are survey abundance rather than Baranov catch", {
+  s<-simulate_example_data(years=2000:2004,seed=1,cv_catch=0)
+  mid<-head(s$true_params$bin_breaks,-1)+diff(s$true_params$bin_breaks)/2
+  q<-mat_func(s$true_params$L50_sel,s$true_params$L95_sel,mid)
+  expected<-sweep(s$true_params$N_at_len,1,q,"*")
+  expect_equal(unname(as.matrix(s$data.CatL[-1])),unname(round(expected,2)),tolerance=1e-12)
+})
+test_that("manual quarterly age simulations retain quarterly observation labels", {
+  p<-initialize_params(rec.age=.25,nage=20,nyear=4,burn_in=2)
+  expect_equal(p$growth_step,.25);expect_equal(p$ages,seq(.25,5,.25))
+  expect_length(p$years,16)
+  s<-sim_data(sim_cal(p),p,iter_range=4,output_dir=tempdir())
+  expect_equal(s$nyear,8);expect_equal(nrow(s$SN_at_len),8L)
+})

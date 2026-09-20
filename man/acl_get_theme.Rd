@@ -11,6 +11,6 @@ A list of ggplot2 theme layers.
 }
 \description{
 This is the function called by plot functions via
-\code{get("acl_get_theme", envir = asNamespace("ACL"))()}.
+\code{get("acl_get_theme", envir = asNamespace("ALSCL"))()}.
 }
 \keyword{internal}

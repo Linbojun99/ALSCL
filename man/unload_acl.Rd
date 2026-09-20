@@ -2,14 +2,14 @@
 % Please edit documentation in R/compile_acl.R
 \name{unload_acl}
 \alias{unload_acl}
-\title{Unload the ACL Dynamic Library}
+\title{Unload a model dynamic library}
 \usage{
 unload_acl(dll_path)
 }
 \arguments{
-\item{dll_path}{Path to the shared library file.}
+\item{dll_path}{Path to the library. Existing TMB objects must no longer be used.}
 }
 \description{
-Unload the ACL Dynamic Library
+Unload a model dynamic library
 }
 \keyword{internal}

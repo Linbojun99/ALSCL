@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_acl.R
 \name{run_acl}
 \alias{run_acl}
-\title{Run Age-Length Structured Stock Assessment Model for User's Data}
+\title{Fit the ACL survey catch-at-length model}
 \usage{
 run_acl(
   data.CatL,
@@ -22,80 +22,69 @@ run_acl(
   output = FALSE,
   train_times = 1,
   ncores = 1,
-  silent = FALSE
+  silent = FALSE,
+  growth_step = NULL,
+  zero_action = c("missing", "error"),
+  control = list()
 )
 }
 \arguments{
-\item{data.CatL}{A matrix containing the length grouping of the catch length,
-which represents the observed catch data in different length groups across years.}
+\item{data.CatL}{Data frame or matrix with length labels in its first column,
+followed by at least two numerically labelled time columns.}
 
-\item{data.wgt}{A matrix containing the length grouping of the weight,
-which indicates the average weight of fish in different length groups across years.}
+\item{data.wgt}{Weight-at-length, with identical labels, columns and dimensions.}
 
-\item{data.mat}{A matrix containing the length grouping of the maturity,
-which represents the proportion of mature individuals in different length groups across years.}
+\item{data.mat}{Maturity-at-length between 0 and 1, with the same layout.}
 
-\item{rec.age}{Numeric, the age at which individuals are assumed to be recruited to the fishery.}
+\item{rec.age}{Recruitment age in years, greater than t0.}
 
-\item{nage}{Numeric, the number of age classes considered in the model.}
+\item{nage}{Number of age classes including the plus group (at least two).}
 
-\item{M}{Numeric, the natural mortality rate,
-which is an important input to the stock assessment model.}
+\item{M}{Nonnegative natural mortality per model time step.}
 
-\item{sel_L50}{Numeric, the length at which 50\% of individuals are mature,
-representing the midpoint of the logistic selectivity curve.}
+\item{sel_L50, sel_L95}{Lengths at 50 and 95 percent survey catchability.}
 
-\item{sel_L95}{Numeric, the length at which 95\% of individuals are mature,
-representing the point near the maximum of the logistic selectivity curve.}
+\item{parameters}{Named list of initial fixed-effect values.}
 
-\item{parameters}{A list containing the custom initial values for the parameters (default is NULL),
-which can be used to fine-tune the model fitting.}
+\item{parameters.L, parameters.U}{Named lower and upper bounds. Bounds are aligned
+with free parameters after applying map. Initial free values are clamped to bounds.}
 
-\item{parameters.L}{A list containing the custom lower bounds for the parameters (default is NULL),
-which can be used to constrain the parameter search space during model fitting.}
+\item{map}{Named TMB factor mappings. factor(NA) fixes a parameter at its supplied
+value; NULL releases a default fixed parameter. Other defaults remain in force.}
 
-\item{parameters.U}{A list containing the custom upper bounds for the parameters (default is NULL),
-which can also be used to constrain the parameter search space during model fitting.}
+\item{len_mid}{Finite length-bin midpoints; overrides automatic parsing.}
 
-\item{map}{A list containing the custom values for the map elements (default is NULL),
-which may help in defining the structure of random effects.}
+\item{len_border}{Interior boundaries, one fewer than the number of length bins.}
 
-\item{len_mid}{Numeric vector, user-specified median length values (default is NULL),
-which can help in defining the length intervals for model fitting.}
+\item{output}{Save diagnostic tables and plots below output/ when TRUE.}
 
-\item{len_border}{Numeric vector, user-specified border length values (default is NULL),
-which can also help in defining the length intervals for model fitting.}
+\item{train_times}{Positive integer; exact number of optimization passes per start.}
 
-\item{output}{Logical, If True, output the results of the model run in plots, tables, etc.(default is FALSE),}
+\item{ncores}{Positive integer; number of independent starts. Values above one
+use socket workers and jitter free parameters only.}
 
-\item{train_times}{Numeric, the number of times the model is to be trained,
-with a default value of 1, corresponding to running the optimization routine once.
-The user can specify a different number of training times to refine the model fit.}
+\item{silent}{Suppress fitting progress messages when TRUE.}
 
-\item{ncores}{Integer. Number of CPU cores for parallel multi-start optimization. Default is 1.}
+\item{growth_step}{Time between consecutive ages, in years. Use 0.25 for quarters.
+ACL infers rec.age when below one, otherwise one, if this argument is NULL.}
 
-\item{silent}{Logical. If TRUE, suppress all progress messages during compilation and optimization. Default is FALSE.
-\itemize{
-\item \strong{ncores = 1} (default): Single-start optimization. OpenMP threads are
-auto-enabled for gradient speedup if ACL.cpp was compiled with OpenMP support.
-\item \strong{ncores > 1}: Parallel multi-start — runs N independent optimizations
-from jittered starting points simultaneously, keeps the best result (lowest objective).
-Uses socket clusters (\code{parallel::parLapply}) on all platforms.
-}
-\strong{Performance note}: multi-start runs in parallel (total time ≈ slowest start,
-NOT sum of all starts). However, more cores means each start runs slightly slower due
-to shared CPU cache/memory bandwidth. Typically 2-4 starts is optimal for \code{run_acl}.
-The main benefit is robustness (exploring multiple optima), not raw speed.
-For speed-focused parallelism, use \code{ncores} in \code{sim_acl()} or \code{retro_acl()}.
-Use \code{parallel::detectCores()} to check available cores.}
+\item{zero_action}{Exclude zero observations as missing (historical behavior),
+or reject them with "error". NA is always missing; negative/infinite values fail.}
+
+\item{control}{A named list of nlminb control settings.}
 }
 \value{
-A list containing the results of the ACL stock assessment model,
-including model outputs (estimated parameters and their standard errors),
-model fit diagnostics, and some other auxiliary information.
+A list with report, opt, obj, est_std, vcov, pdHess, gradient,
+max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,
+year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics.
+The DLL remains loaded so the returned obj can be evaluated in the same session.
 }
 \description{
-This function implements an age-length structured (ACL) model to
-assess the status of a fish population given user's data. It aims to determine
-the health of a fish stock and guide the sustainable management of fishery resources.
+Fit the ACL survey catch-at-length model
+}
+\details{
+M and F are per model time step; vbk is per year. The first and last
+length bins absorb the distribution tails. Compilation uses a writable session
+cache. Optimizer success, gradient size, Hessian status and boundary hits should
+be assessed separately before interpreting estimates or uncertainty.
 }

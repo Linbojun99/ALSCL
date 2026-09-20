@@ -2,7 +2,7 @@
 % Please edit documentation in R/acl_theme.R
 \name{acl_theme}
 \alias{acl_theme}
-\title{ACL Plot Theme Configuration}
+\title{ALSCL Plot Theme Configuration}
 \usage{
 acl_theme(what = NULL)
 }
@@ -15,11 +15,11 @@ A list of current settings, or a single element if \code{what}
 is specified.
 }
 \description{
-Global settings for all ACL plot functions, including model comparison plots.
+Global settings for all ALSCL plot functions, including model comparison plots.
 Change titles, axis labels, font family, colors, line sizes, and
 comparison plot styles in one place.
 
-Returns the current global theme settings used by all ACL plot functions.
+Returns the current global theme settings used by all ALSCL plot functions.
 }
 \section{Usage}{
 

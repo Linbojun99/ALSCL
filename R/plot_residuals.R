@@ -11,9 +11,10 @@
 #' a "resid_index" component, representing the residuals for each index.
 #' @param f Numeric. The smoother span for the loess smooth line in the plot. This gives the proportion of points in the plot which
 #' influence the smooth at each value. Larger values result in more smoothing. Default is 0.4.
-#' @param line_color Character. The color of the line in the plot. Default is "black".
-#' @param smooth_color Character. The color of the smooth line in the plot. Default is "blue".
-#' @param hline_color Character. The color of the horizontal line (at y=0) in the plot. Default is "red".
+#' Sparse facets use a linear trend; otherwise the span is enlarged when needed for at least five neighbors.
+#' @param line_color Character or NULL. NULL inherits the global line_color setting.
+#' @param smooth_color Character or NULL. NULL inherits the global smooth_color setting.
+#' @param hline_color Character or NULL. NULL inherits the global hline_color setting.
 #' @param line_size Numeric. The size of the lines in the plot. Default is 1.
 #' @param facet_ncol Numeric, optional. Number of columns in facet wrap.  Default is NULL.
 #' @param facet_scales Character. The "scales" argument for the facet_wrap function in ggplot2. Default is "free".
@@ -27,7 +28,7 @@
 #' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
-#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "Arial").
+#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
 #' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
 #' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
@@ -56,8 +57,29 @@
 #' print(p_year)
 #' }
 #' @export
-plot_residuals <- function(model_result, f = 0.4, line_color = "black", smooth_color = "blue", hline_color = "red", line_size = 1, facet_scales = "free", facet_ncol=NULL,type=c("length","year"), resid_cap = NULL, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
+plot_residuals <- function(model_result, f = 0.4, line_color = NULL, smooth_color = NULL, hline_color = NULL, line_size = 1, facet_scales = "free", facet_ncol=NULL,type=c("length","year"), resid_cap = NULL, return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
+  # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_color)) line_color <- acl_theme("line_color")
+  if (is.null(smooth_color)) smooth_color <- acl_theme("smooth_color")
+  if (is.null(hline_color)) hline_color <- acl_theme("hline_color")
 
+
+  type <- match.arg(type)
+  if (length(f) != 1L || !is.finite(f) || f <= 0 || f > 1) stop("f must be in (0, 1].")
+  smoother <- function(data, x, group) {
+    valid <- is.finite(data[[x]]) & is.finite(data$residual)
+    counts <- vapply(split(data[[x]][valid], data[[group]][valid], drop = TRUE),
+                     function(z) length(unique(z)), integer(1))
+    if (!length(counts) || min(counts) < 2L) return(NULL)
+    # Sparse facets cannot support a local polynomial; use a linear trend.
+    short <- min(counts) < 6L
+    ggplot2::geom_smooth(method = if (short) "lm" else "loess", formula = y ~ x,
+      method.args = if (short) list() else list(degree = 1),
+      span = max(f, min(1, 5/min(counts))), se = FALSE, na.rm = TRUE,
+      color = smooth_color, linetype = 2, linewidth = line_size)
+  }
+  mask <- model_result$obj$env$.data$na_matrix
+  if (!is.null(mask)) model_result$report$resid_index[mask == 0] <- NA_real_
   len_label=model_result[["len_label"]]
 
   if(type=="length"){
@@ -89,9 +111,9 @@ plot_residuals <- function(model_result, f = 0.4, line_color = "black", smooth_c
                                     levels = fixed_len_labels)
     p <- ggplot2::ggplot(plot_data, ggplot2::aes(x=year, y=residual)) +
       ggplot2::geom_line(color = line_color, linewidth = line_size) +
-      ggplot2::geom_smooth(method="loess", formula=y~x, se=FALSE, color=smooth_color, linetype=2, linewidth=line_size) +
+      smoother(plot_data, "year", "LengthGroup") +
       ggplot2::geom_hline(yintercept=0, color=hline_color, linewidth=line_size) +
-      ggplot2::facet_wrap(~LengthGroup, scales = facet_scales)+
+      ggplot2::facet_wrap(~LengthGroup, scales = facet_scales, ncol = facet_ncol)+
       .acl_scale_x(x_breaks, n_breaks = 8) +
       .acl_base_theme(font_family, title_size, axis_title_size, axis_text_size, strip_text_size, legend_text_size, base_theme = base_theme, title_hjust = title_hjust)+
       ggplot2::labs(x=.acl_lab("x","year"),y=.acl_lab("y","residual"),title=.acl_title("resid_length"))+
@@ -129,7 +151,7 @@ plot_residuals <- function(model_result, f = 0.4, line_color = "black", smooth_c
                            levels = paste("Year", sort(unique(as.numeric(df_long$Year)))))
     p <- ggplot2::ggplot(df_long, ggplot2::aes(x=length, y=residual)) +
       ggplot2::geom_line(color = line_color, linewidth = line_size) +
-      ggplot2::geom_smooth(method="loess", formula=y~x, se=FALSE, color=smooth_color, linetype=2, linewidth=line_size) +
+      smoother(df_long, "length", "Year") +
       ggplot2::geom_hline(yintercept=0, color=hline_color, linewidth=line_size) +
       ggplot2::facet_wrap(~Year, scales = facet_scales,ncol = facet_ncol)+
       .acl_scale_x(x_breaks, n_breaks = 8) +

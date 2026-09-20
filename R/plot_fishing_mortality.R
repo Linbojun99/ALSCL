@@ -8,10 +8,10 @@
 #'
 #' @param model_result A list obtained from \code{run_acl} or \code{run_alscl}.
 #' @param line_size Numeric. The thickness of the line. Default is 1.
-#' @param line_color Character. The color of the line. Default is "red".
+#' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. The type of the line. Default is "solid".
 #' @param se Logical. Whether to plot confidence intervals. Default is FALSE.
-#' @param se_color Character. The color of the CI ribbon. Default is "red".
+#' @param se_color Character or NULL. NULL inherits the global se_color setting.
 #' @param se_alpha Numeric. The transparency of the ribbon. Default is 0.2.
 #' @param se_type Character. "ribbon" or "errorbar". Default is "ribbon".
 #' @param facet_ncol Integer. The number of columns in facet_wrap.
@@ -30,11 +30,15 @@
 #' @return A ggplot object, or a list with plot and data if return_data = TRUE.
 #'
 #' @export
-plot_fishing_mortality <- function(model_result, line_size = 1, line_color = "red", line_type = "solid", facet_ncol = NULL,
-                                   facet_scales = "free", se = FALSE, se_color = "red", se_alpha = 0.2, se_type = "ribbon",
+plot_fishing_mortality <- function(model_result, line_size = 1, line_color = NULL, line_type = "solid", facet_ncol = NULL,
+                                   facet_scales = "free", se = FALSE, se_color = NULL, se_alpha = 0.2, se_type = "ribbon",
                                    type = c("year", "age", "length"), return_data = FALSE,
                                    x_breaks = NULL, title = NULL, xlab = NULL, ylab = NULL,
                                    font_family = NULL, title_size = NULL, base_theme = NULL) {
+  # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_color)) line_color <- acl_theme("line_color")
+  if (is.null(se_color)) se_color <- acl_theme("se_color")
+
 
   type <- match.arg(type)
 
@@ -47,7 +51,7 @@ plot_fishing_mortality <- function(model_result, line_size = 1, line_color = "re
   current_theme <- if (!is.null(base_theme)) {
     base_theme
   } else {
-    tryCatch(get("acl_get_theme", envir = asNamespace("ACL"))(), error = function(e) ggplot2::theme_minimal())
+    tryCatch(get("acl_get_theme", envir = asNamespace("ALSCL"))(), error = function(e) ggplot2::theme_minimal())
   }
 
   # ===================================================================

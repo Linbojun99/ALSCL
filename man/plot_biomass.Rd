@@ -7,10 +7,10 @@
 plot_biomass(
   model_result,
   line_size = 1.2,
-  line_color = "red",
+  line_color = NULL,
   line_type = "solid",
   se = FALSE,
-  se_color = "red",
+  se_color = NULL,
   se_alpha = 0.2,
   type = c("B", "BL", "BA"),
   facet_ncol = NULL,
@@ -23,13 +23,13 @@ plot_biomass(
 
 \item{line_size}{Numeric. Line thickness. Default is 1.2.}
 
-\item{line_color}{Character. Line color. Default is "red".}
+\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
 \item{line_type}{Character. Line type. Default is "solid".}
 
 \item{se}{Logical. Whether to plot confidence intervals. Default is FALSE.}
 
-\item{se_color}{Character. CI ribbon color. Default is "red".}
+\item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
 \item{se_alpha}{Numeric. CI ribbon transparency. Default is 0.2.}
 

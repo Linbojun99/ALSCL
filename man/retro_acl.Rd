@@ -14,6 +14,36 @@ retro_acl(
   M,
   sel_L50,
   sel_L95,
+  parameters = NULL,
+  parameters.L = NULL,
+  parameters.U = NULL,
+  map = NULL,
+  len_mid = NULL,
+  len_border = NULL,
+  plot = FALSE,
+  line_size = 1.2,
+  point_size = 3,
+  point_shape = 21,
+  facet_scales = "free",
+  facet_col = NULL,
+  facet_row = NULL,
+  train_times = 1,
+  title = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  font_family = NULL,
+  title_size = NULL,
+  axis_title_size = NULL,
+  axis_text_size = NULL,
+  strip_text_size = NULL,
+  legend_text_size = NULL,
+  x_breaks = NULL,
+  base_theme = NULL,
+  title_hjust = NULL,
+  rho_digits = 4,
+  rho_position = "top_right",
+  rho_size = 3.5,
+  ncores = 1,
   ...
 )
 }
@@ -35,6 +65,66 @@ retro_acl(
 \item{sel_L50}{Length at 50 percent selectivity.}
 
 \item{sel_L95}{Length at 95 percent selectivity.}
+
+\item{parameters}{Optional custom starting parameter list.}
+
+\item{parameters.L}{Optional lower bounds for parameters.}
+
+\item{parameters.U}{Optional upper bounds for parameters.}
+
+\item{map}{Optional TMB map argument for fixing parameters.}
+
+\item{len_mid}{Optional numeric vector of length bin midpoints.}
+
+\item{len_border}{Optional numeric vector of length bin borders.}
+
+\item{plot}{Logical. If TRUE, include plot in return value. Default is FALSE.}
+
+\item{line_size}{Numeric. Line thickness. Default is 1.2.}
+
+\item{point_size}{Numeric. Point size for endpoints. Default is 3.}
+
+\item{point_shape}{Numeric. Point shape for endpoints. Default is 21.}
+
+\item{facet_scales}{Character. Facet scales argument. Default is "free".}
+
+\item{facet_col}{Integer or NULL. Number of facet columns.}
+
+\item{facet_row}{Integer or NULL. Number of facet rows.}
+
+\item{train_times}{Numeric. Number of optimization restarts. Default is 1.}
+
+\item{title}{Character or NULL. Custom plot title.}
+
+\item{xlab}{Character or NULL. Custom x-axis label.}
+
+\item{ylab}{Character or NULL. Custom y-axis label.}
+
+\item{font_family}{Character or NULL. Font family.}
+
+\item{title_size}{Numeric or NULL. Title size in pt.}
+
+\item{axis_title_size}{Numeric or NULL. Axis title size in pt.}
+
+\item{axis_text_size}{Numeric or NULL. Axis tick label size in pt.}
+
+\item{strip_text_size}{Numeric or NULL. Facet label size in pt.}
+
+\item{legend_text_size}{Numeric or NULL. Legend text size in pt.}
+
+\item{x_breaks}{Numeric vector or NULL. Custom x-axis breaks.}
+
+\item{base_theme}{Character or NULL. Base ggplot2 theme name.}
+
+\item{title_hjust}{Numeric or NULL. Title horizontal alignment.}
+
+\item{rho_digits}{Integer. Decimal places for Mohn's rho display. Default is 4.}
+
+\item{rho_position}{Character. Position of rho text. Default is "top_right".}
+
+\item{rho_size}{Numeric. Font size of rho text. Default is 3.5.}
+
+\item{ncores}{Integer. Number of CPU cores for parallel peel computation. Default is 1.}
 
 \item{...}{Additional arguments passed to \code{\link[=retro_model]{retro_model()}}.}
 }

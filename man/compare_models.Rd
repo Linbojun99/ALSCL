@@ -29,8 +29,9 @@ A list with:
 \item{summary}{Data frame with convergence, objective, AIC, BIC, number of parameters.}
 \item{growth}{Data frame comparing VB growth parameters.}
 \item{fit_metrics}{Data frame with MSE, RMSE, R-squared, MAPE, etc. for each model.}
-\item{correlation}{Data frame with Pearson correlations of SSB, Rec, B, N, CN between models.}
-\item{trend_ratio}{Data frame with mean ratio (model2/model1) for each quantity.}
+\item{correlation}{Data frame with Pearson correlations and Ratio_Mean,
+the ratio of means (model2/model1), for common population quantities.}
+\item{model1_name,model2_name}{Labels used in the comparison.}
 }
 }
 \description{

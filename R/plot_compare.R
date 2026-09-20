@@ -177,12 +177,12 @@ plot_compare_ts <- function(model1, model2,
 #' Compare Fishing Mortality Heatmaps Between Two Models
 #'
 #' @inheritParams plot_compare_ts
-#' @param palette Character. viridis palette. Default "inferno".
+#' @param palette Character or NULL. NULL uses the global sequential colors; a ggsci palette name or a viridis option overrides them.
 #' @return A ggplot object.
 #' @export
 plot_compare_F <- function(model1, model2,
                            model1_name = NULL, model2_name = NULL,
-                           palette = "inferno") {
+                           palette = NULL) {
 
   if (is.null(model1_name)) model1_name <- .detect_model_name(model1, "Model 1")
   if (is.null(model2_name)) model2_name <- .detect_model_name(model2, "Model 2")
@@ -223,7 +223,7 @@ plot_compare_F <- function(model1, model2,
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Year, y = Label, fill = F_value)) +
     ggplot2::geom_tile() +
-    ggplot2::scale_fill_viridis_c(option = palette, name = "F") +
+    .acl_fill_continuous(palette, name = "F") +
     ggplot2::facet_wrap(~Model, scales = "free_y") +
     ggplot2::labs(title = .acl_title("compare_F", model1_name, model2_name),
                   x = .acl_lab("x", "year"), y = "") +
@@ -506,7 +506,7 @@ plot_compare_growth <- function(model1, model2, age_range = c(1, 20),
   colnames(pla_df) <- c("Length", "Age", "Probability", "Model")
 
   p_pla <- ggplot2::ggplot(pla_df, ggplot2::aes(x = Age, y = Length, fill = Probability)) +
-    ggplot2::geom_tile() + ggplot2::scale_fill_viridis_c() +
+    ggplot2::geom_tile() + .acl_fill_continuous() +
     ggplot2::facet_wrap(~Model) +
     ggplot2::labs(title = "Length-at-Age Probability (pla)", x = "Age Group", y = "Length Bin") +
     .acl_base_theme() + ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"))
@@ -715,8 +715,10 @@ plot_compare_metrics <- function(model1, model2, data.CatL,
 # plot_compare_selectivity
 # ==========================================================================
 
-#' Compare Selectivity Patterns
+#' Compare supplied survey catchability at length
 #'
+#' Connects the supplied catchability values directly, preserving their range.
+#' The values are fixed model inputs, not estimated fishery selectivity.
 #' @inheritParams plot_compare_ts
 #' @return A ggplot object.
 #' @export
@@ -734,12 +736,12 @@ plot_compare_selectivity <- function(model1, model2,
               data.frame(Length = model2$len_mid, Selectivity = q2, Model = model2_name))
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = Length, y = Selectivity, color = Model, linetype = Model)) +
-    ggplot2::geom_smooth(method = "loess", se = FALSE, linewidth = cfg$linewidth, span = 0.5) +
+    ggplot2::geom_line(linewidth = cfg$linewidth) +
     ggplot2::geom_point(size = cfg$point_size) +
     ggplot2::scale_color_manual(values = cfg$colors) +
     ggplot2::scale_linetype_manual(values = cfg$linetypes) +
     ggplot2::labs(title = .acl_title("compare_sel", model1_name, model2_name),
-                  x = .acl_lab("x", "length"), y = "Selectivity (q)") +
+                  x = .acl_lab("x", "length"), y = "Survey catchability (q)") +
     .acl_base_theme() + ggplot2::theme(legend.position = cfg$legend_pos)
   return(p)
 }

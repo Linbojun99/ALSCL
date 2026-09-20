@@ -7,12 +7,12 @@
 plot_fishing_mortality(
   model_result,
   line_size = 1,
-  line_color = "red",
+  line_color = NULL,
   line_type = "solid",
   facet_ncol = NULL,
   facet_scales = "free",
   se = FALSE,
-  se_color = "red",
+  se_color = NULL,
   se_alpha = 0.2,
   se_type = "ribbon",
   type = c("year", "age", "length"),
@@ -31,7 +31,7 @@ plot_fishing_mortality(
 
 \item{line_size}{Numeric. The thickness of the line. Default is 1.}
 
-\item{line_color}{Character. The color of the line. Default is "red".}
+\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
 \item{line_type}{Character. The type of the line. Default is "solid".}
 
@@ -41,7 +41,7 @@ plot_fishing_mortality(
 
 \item{se}{Logical. Whether to plot confidence intervals. Default is FALSE.}
 
-\item{se_color}{Character. The color of the CI ribbon. Default is "red".}
+\item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
 \item{se_alpha}{Numeric. The transparency of the ribbon. Default is 0.2.}
 

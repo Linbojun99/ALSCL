@@ -11,26 +11,7 @@
 #include <TMB.hpp>
 #include <iostream>
 
-template<class Type>
-Type pnorm_discrete(Type upper, Type lower){
-
-	Type zero = 0.0;
-	Type one = 1.0;
-
-	Type mid = 0.5 * (upper + lower);
-	Type mid2 = mid*mid;
-	Type mid4 = mid*mid*mid*mid;
-	Type ub = upper - mid;
-	Type lb = lower - mid;
-	Type d1 = upper - lower;
-	Type d3 = ub*ub*ub - lb*lb*lb;
-	Type d5 = ub*ub*ub*ub*ub - lb*lb*lb*lb*lb;
-	Type ts = d1 + (mid2-1)*d3/6 + (mid4-6*mid2+3)*d5/120; // taylor series expansion
-
-	Type ret = dnorm(mid,zero,one,false) * ts;
-
-	return ret;
-}
+#include "model_math.hpp"
 
 template<class Type>
 Type objective_function<Type>::operator() ()
@@ -84,11 +65,11 @@ Type objective_function<Type>::operator() ()
   Type std_log_N0 = exp(log_std_log_N0);
 
   Type std_log_R = exp(log_std_log_R);
-  Type phi_log_R = exp(logit_log_R)/(one + exp(logit_log_R));
+  Type phi_log_R = invlogit(logit_log_R);
 
   Type std_log_F = exp(log_std_log_F);
-  Type phi_log_F_y = exp(logit_log_F_y)/(one+exp(logit_log_F_y));
-  Type phi_log_F_a = exp(logit_log_F_a)/(one+exp(logit_log_F_a));
+  Type phi_log_F_y = invlogit(logit_log_F_y);
+  Type phi_log_F_a = invlogit(logit_log_F_a);
 
   Type vbk = exp(log_vbk);
   Type Linf = exp(log_Linf);
@@ -107,45 +88,7 @@ Type objective_function<Type>::operator() ()
 
   using namespace density; // call functions in TMB density namespace
 
-  // compute length age key - proportion in each length bin, by age;
-	for(int j = 0;j < A;++j){
-		Type ml = Linf*(one - exp(-vbk*(age(j)-t0)));
-		Type sl = ml*cv_len;
-		vector<Type> len_border_std = (len_border-ml)/sl; // standardized border among length bins
-
-		int expand = 10; // the expansion of lower and upper bins
-		vector<Type> lower_bin(expand);
-		Type Ub = len_border_std(0);
-		Type Lb = Ub - 1.0;
-		lower_bin(0) = pnorm_discrete(Ub,Lb);
-		for(int n=1; n<expand; ++n){
-			Ub = Ub - 1.0;
-			Lb = Ub - 1.0;
-			lower_bin(n) = pnorm_discrete(Ub,Lb);
-		}
-		pla(0,j) = lower_bin.sum(); // first length bin
-
-		for(int i=1; i< (L-1);++i){
-			pla(i,j) = pnorm_discrete(len_border_std(i),len_border_std(i-1));
-		}
-
-		vector<Type> upper_bin(expand);
-		Lb = len_border_std(L-2);
-		Ub = Lb + 1.0;
-		upper_bin(0) = pnorm_discrete(Ub,Lb);
-		for(int n=1; n<expand; ++n){
-			Lb = Lb + 1.0;
-			Ub = Lb + 1.0;
-			upper_bin(n) = pnorm_discrete(Ub,Lb);
-		}
-		pla(L-1,j) = upper_bin.sum(); // last length bin
-	}
-
-	for(int i=0; i<L; ++i){
-		for(int j=0; j<A; ++j){
-			if(pla(i,j)<1e-20){pla(i,j)=1e-20;};
-		}
-	}
+  pla = length_age_key(len_border, age, Linf, vbk, t0, cv_len);
 
   //compute Z,F and M
   for(int i = 0;i < A;++i){
@@ -176,7 +119,7 @@ Type objective_function<Type>::operator() ()
 		log_NA(i,j) = log_NA(i-1,j-1) - Z(i-1,j-1);
 		NA(i,j) = exp(log_NA(i,j));
 	}
-	NA(A-1,j) = NA(A-2,j-1)*exp(-Z(A-2,j-1)) + NA(A-2,j)*exp(-Z(A-2,j)); // plus group
+	NA(A-1,j) = NA(A-2,j-1)*exp(-Z(A-2,j-1)) + NA(A-1,j-1)*exp(-Z(A-1,j-1)); // plus group
 	log_NA(A-1,j) = log(NA(A-1,j));
   }
 
@@ -185,7 +128,7 @@ Type objective_function<Type>::operator() ()
 	NL.col(i) = pla * NA.col(i);
 	N(i)=NA.col(i).sum();
   }
-  log_NL= log(NL.array());
+  log_NL= log(NL.array() + Type(1e-300));
 
   // compute biomass at age and length
   vector<Type> B(Y);
@@ -220,7 +163,8 @@ Type objective_function<Type>::operator() ()
   for(int i = 0;i < L;++i){
 	for(int j=0; j<Y; ++j){
   	Elog_index(i,j) = log_q(i) + log_NL(i,j);
-		resid_index(i,j) = (logN_at_len(i,j) - Elog_index(i,j)) * na_matrix(i,j);
+		resid_index(i,j) = zero;
+		if (na_matrix(i,j)>0) resid_index(i,j) = (logN_at_len(i,j) - Elog_index(i,j)) * na_matrix(i,j);
 	}
   }
 

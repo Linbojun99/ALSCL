@@ -7,13 +7,13 @@
 #' The function also allows customization of the color gradient used in the heatmap to make the contrast between different probability values more apparent.
 #'
 #' @param model_result A list that contains model output. The model output should include a PLA report.
-#' @param low_col A string specifying the color for low probabilities. Default is "white".
-#' @param high_col A string specifying the color for high probabilities. Default is "red".
+#' @param low_col Character or NULL. NULL inherits the global low_col setting.
+#' @param high_col Character or NULL. NULL inherits the global high_col setting.
 #'
 #' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
-#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "Arial").
+#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
 #' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
 #' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
@@ -37,7 +37,11 @@
 #' # Generate a heatmap with a custom color gradient from white to steelblue
 #' plot_pla(model_result, "white", "steelblue")
 #' }
-plot_pla <- function(model_result, low_col = "white", high_col = "red", title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
+plot_pla <- function(model_result, low_col = NULL, high_col = NULL, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL) {
+  # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(low_col)) low_col <- acl_theme("low_col")
+  if (is.null(high_col)) high_col <- acl_theme("high_col")
+
 
   pla=model_result[["report"]][["pla"]]
   len_label=model_result[["len_label"]]

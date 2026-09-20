@@ -7,10 +7,10 @@
 #'
 #' @param model_result A list that contains the model output. The list should have a "report" component which contains a "Rec" component representing Recruitment.
 #' @param line_size Numeric. Specifies the thickness of the line in the plot. Default is 1.2.
-#' @param line_color Character. Specifies the color of the line in the plot. Default is "red".
+#' @param line_color Character or NULL. NULL inherits the global line_color setting.
 #' @param line_type Character. Specifies the type of the line in the plot. Default is "solid".
 #' @param se Logical. Determines whether to calculate and plot the standard error as confidence intervals. Default is FALSE.
-#' @param se_color Character. Specifies the color of the confidence interval ribbon. Default is "red".
+#' @param se_color Character or NULL. NULL inherits the global se_color setting.
 #' @param se_alpha Numeric. The transparency of the confidence interval ribbon. Default is 0.2.
 #' @param se_type Character. Type of CI display: "ribbon" (shaded area) or "errorbar" (error bars). Default is "ribbon".
 #' @param return_data A logical indicating whether to return the processed data alongside the plot. Default is FALSE.
@@ -18,7 +18,7 @@
 #' @param title Character or NULL. Custom plot title. If NULL, uses global theme setting. See \code{acl_theme_set()}.
 #' @param xlab Character or NULL. Custom x-axis label. If NULL, uses global theme setting.
 #' @param ylab Character or NULL. Custom y-axis label. If NULL, uses global theme setting.
-#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "Arial").
+#' @param font_family Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").
 #' @param title_size Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).
 #' @param axis_title_size Numeric or NULL. Axis title size in pt. If NULL, uses global theme (default 12).
 #' @param axis_text_size Numeric or NULL. Axis tick label size in pt. If NULL, uses global theme (default 10).
@@ -43,7 +43,11 @@
 #'
 #' @export
 
-plot_recruitment <- function(model_result, line_size = 1.5, line_color = "#D32F2F", line_type = "solid", se = FALSE, se_color = "#D32F2F", se_alpha = 0.2, se_type = c("ribbon", "errorbar"), return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
+plot_recruitment <- function(model_result, line_size = 1.5, line_color = NULL, line_type = "solid", se = FALSE, se_color = NULL, se_alpha = 0.2, se_type = c("ribbon", "errorbar"), return_data = FALSE, title = NULL, xlab = NULL, ylab = NULL, font_family = NULL, title_size = NULL, axis_title_size = NULL, axis_text_size = NULL, strip_text_size = NULL, legend_text_size = NULL, x_breaks = NULL, base_theme = NULL, title_hjust = NULL){
+  # NULL 继承全局色板 / NULL inherits the global palette.
+  if (is.null(line_color)) line_color <- acl_theme("line_color")
+  if (is.null(se_color)) se_color <- acl_theme("se_color")
+
   # Extract the recruitment data
   recruitment <- model_result[["report"]][["Rec"]]
 

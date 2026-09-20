@@ -7,7 +7,7 @@
 sim_data(
   bio_vars,
   params,
-  sim_year = 100,
+  sim_year = NULL,
   output_dir = ".",
   iter_range = 4:100,
   return_iter = NULL
@@ -18,9 +18,9 @@ sim_data(
 
 \item{params}{A list from \code{initialize_params()} containing parameters.}
 
-\item{sim_year}{Integer, total number of simulation years (default: 100).}
+\item{sim_year}{Total simulation years; NULL uses params$nyear.}
 
-\item{output_dir}{Character, directory for saving results (default: tempdir()).}
+\item{output_dir}{Directory for saving results (default: current directory).}
 
 \item{iter_range}{Integer vector, which iterations (seeds) to run (default: 4:100).}
 

@@ -1,6 +1,6 @@
-#' ACL Plot Theme Configuration
+#' ALSCL Plot Theme Configuration
 #'
-#' Global settings for all ACL plot functions, including model comparison plots.
+#' Global settings for all ALSCL plot functions, including model comparison plots.
 #' Change titles, axis labels, font family, colors, line sizes, and
 #' comparison plot styles in one place.
 #'
@@ -47,7 +47,50 @@ NULL
 # ---------------------------------------------------------------------------
 # Default configuration (internal)
 # ---------------------------------------------------------------------------
+# ggsci 色板与角色 / ggsci palettes and semantic roles.
+.acl_palette <- function(palette = "npg", n = NULL) {
+  palette <- match.arg(tolower(palette), c("npg", "aaas", "nejm", "lancet", "jama"))
+  cols <- switch(palette,
+    npg = ggsci::pal_npg("nrc")(10),
+    aaas = ggsci::pal_aaas("default")(10),
+    nejm = ggsci::pal_nejm("default")(8),
+    lancet = ggsci::pal_lancet("lanonc")(9),
+    jama = ggsci::pal_jama("default")(7))
+  if (is.null(n)) return(cols)
+  # 原生颜色用尽后插值；不循环重复 / Interpolate beyond the native size.
+  if (n <= length(cols)) cols[seq_len(n)] else grDevices::colorRampPalette(cols)(n)
+}
+
+.acl_palette_roles <- function(palette) {
+  cols <- .acl_palette(palette)
+  primary <- if (palette == "npg") cols[4] else cols[1]
+  accent <- if (palette == "npg") cols[1] else cols[2]
+  list(palette = palette, line_color = primary, se_color = primary,
+       compare_colors = c(primary, accent), point_color = primary,
+       observed_color = accent, smooth_color = cols[3],
+       hline_color = "grey55", low_col = "#F7F9FC", high_col = primary)
+}
+
+# 连续量使用浅到深渐变 / Continuous values use a light-to-dark gradient.
+.acl_fill_continuous <- function(palette = NULL, name = ggplot2::waiver()) {
+  if (is.null(palette)) return(ggplot2::scale_fill_gradient(
+    low = acl_theme("low_col"), high = acl_theme("high_col"), name = name))
+  if (length(palette) == 1 && tolower(palette) %in% c("npg", "aaas", "nejm", "lancet", "jama")) {
+    roles <- .acl_palette_roles(tolower(palette))
+    return(ggplot2::scale_fill_gradient(low = roles$low_col, high = roles$high_col, name = name))
+  }
+  ggplot2::scale_fill_viridis_c(option = palette, name = name)
+}
+
 .acl_defaults <- list(
+
+  palette = "npg",
+  point_color = .acl_palette_roles("npg")$point_color,
+  observed_color = .acl_palette_roles("npg")$observed_color,
+  smooth_color = .acl_palette_roles("npg")$smooth_color,
+  hline_color = "grey55",
+  low_col = "#F7F9FC",
+  high_col = .acl_palette_roles("npg")$high_col,
 
   # --- Base ggplot2 theme --------------------------------------------------
   base_theme = "theme_bw",
@@ -68,9 +111,9 @@ NULL
   x_expand = c(0.01, 0.01),
 
   # --- Default colors and line sizes (single-model plots) ------------------
-  line_color  = "#D32F2F",
+  line_color  = .acl_palette_roles("npg")$line_color,
   line_size   = 1.5,
-  se_color    = "#D32F2F",
+  se_color    = .acl_palette_roles("npg")$se_color,
   se_alpha    = 0.2,
 
   # --- Comparison plot settings (plot_compare_* functions) ------------------
@@ -80,7 +123,7 @@ NULL
   #   c("#2166AC", "#B2182B")                       positional
   #   c(ACL = "#2166AC", ALSCL = "#B2182B")         named
   #   c("M=0" = "steelblue", "M=0.5" = "tomato")   custom names
-  compare_colors     = c("#2166AC", "#B2182B"),
+  compare_colors     = .acl_palette_roles("npg")$compare_colors,
   compare_linetypes  = c("solid", "dashed"),
   compare_linewidth  = 1.2,
   compare_point_size = 2,
@@ -173,6 +216,7 @@ NULL
   ),
 
   ylab = list(
+    year      = "Year",
     abundance = "Relative abundance",
     biomass   = "Biomass",
     ssb       = "SSB",
@@ -190,9 +234,9 @@ NULL
 # Public API
 # ---------------------------------------------------------------------------
 
-#' Get Current ACL Plot Theme
+#' Get Current ALSCL Plot Theme
 #'
-#' Returns the current global theme settings used by all ACL plot functions.
+#' Returns the current global theme settings used by all ALSCL plot functions.
 #'
 #' @param what Optional character. Retrieve a specific element, e.g.
 #'   \code{"titles"}, \code{"font_family"}, \code{"compare_colors"}.
@@ -204,13 +248,13 @@ NULL
 #' acl_theme("font_family")
 #' acl_theme("compare_colors")
 acl_theme <- function(what = NULL) {
-  current <- getOption("acl.theme", .acl_defaults)
+  current <- utils::modifyList(.acl_defaults, getOption("acl.theme", list()))
   if (is.null(what)) return(current)
   current[[what]]
 }
 
 
-#' Set ACL Plot Theme Options
+#' Set ALSCL Plot Theme Options
 #'
 #' Modify one or more global theme settings. Partial updates are supported:
 #' only the fields you specify will be changed; all others keep their
@@ -241,6 +285,13 @@ acl_theme <- function(what = NULL) {
 #' @param compare_legend_pos Character. Legend position for comparison plots.
 #' @param compare_facet_ncol Integer. Default facet columns in comparison plots.
 #' @param compare_facet_scales Character. Facet scales for comparison plots.
+#' @param palette Character or NULL. ggsci palette: "npg" (default), "aaas",
+#'   "nejm", "lancet", or "jama". Changing it resets palette-derived colors;
+#'   explicit color arguments in the same call take precedence. No arguments
+#'   leaves settings unchanged; use acl_theme_reset() to reset.
+#' @param point_color,observed_color,smooth_color,hline_color Character or NULL.
+#'   Default point, observation, smoother and reference-line colors.
+#' @param low_col,high_col Character or NULL. Continuous heatmap endpoints.
 #' @param titles Named list. Override specific titles.
 #' @param xlab Named list. Override specific x-axis labels.
 #' @param ylab Named list. Override specific y-axis labels.
@@ -281,10 +332,21 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
                           compare_linewidth = NULL, compare_point_size = NULL,
                           compare_se_alpha = NULL, compare_legend_pos = NULL,
                           compare_facet_ncol = NULL, compare_facet_scales = NULL,
-                          titles = NULL, xlab = NULL, ylab = NULL) {
+                          titles = NULL, xlab = NULL, ylab = NULL,
+                          palette = NULL, point_color = NULL, observed_color = NULL,
+                          smooth_color = NULL, hline_color = NULL,
+                          low_col = NULL, high_col = NULL) {
 
-  current <- getOption("acl.theme", .acl_defaults)
+  current <- utils::modifyList(.acl_defaults, getOption("acl.theme", list()))
   old <- current
+  if (!is.null(palette)) {
+    palette <- match.arg(tolower(palette), c("npg", "aaas", "nejm", "lancet", "jama"))
+    current <- utils::modifyList(current, .acl_palette_roles(palette))
+  }
+  for (key in c("point_color", "observed_color", "smooth_color", "hline_color", "low_col", "high_col")) {
+    value <- get(key)
+    if (!is.null(value)) current[[key]] <- value
+  }
 
   if (!is.null(base_theme))           current$base_theme           <- base_theme
   if (!is.null(font_family))          current$font_family          <- font_family
@@ -317,14 +379,14 @@ acl_theme_set <- function(base_theme = NULL, font_family = NULL, title_size = NU
 }
 
 
-#' Reset ACL Plot Theme to Defaults
+#' Reset ALSCL Plot Theme to Defaults
 #'
 #' @export
 #' @examples
 #' acl_theme_reset()
 acl_theme_reset <- function() {
   options(acl.theme = .acl_defaults)
-  cat("ACL plot theme reset to defaults.\n")
+  cat("ALSCL plot theme reset to defaults.\n")
 }
 
 
@@ -353,7 +415,7 @@ acl_theme_reset <- function() {
   if (!is.null(result)) result else key
 }
 
-#' Build the standard ACL ggplot theme layer
+#' Build the standard ALSCL ggplot theme layer
 #' @keywords internal
 .acl_base_theme <- function(font_family = NULL, title_size = NULL,
                             axis_title_size = NULL, axis_text_size = NULL,
@@ -368,6 +430,7 @@ acl_theme_reset <- function() {
   sts <- if (!is.null(strip_text_size))   strip_text_size  else acl_theme("strip_text_size")
   lts <- if (!is.null(legend_text_size))  legend_text_size else acl_theme("legend_text_size")
 
+  if (!startsWith(bt, "theme_")) bt <- paste0("theme_", bt)
   theme_fn <- switch(bt,
                      "theme_bw"        = ggplot2::theme_bw,
                      "theme_minimal"   = ggplot2::theme_minimal,
@@ -463,7 +526,7 @@ acl_theme_reset <- function() {
   }
 
   list(
-    colors     = resolve_pair(colors,    "compare_colors",    c("#2166AC", "#B2182B")),
+    colors     = resolve_pair(colors,    "compare_colors",    .acl_defaults$compare_colors),
     linetypes  = resolve_pair(linetypes, "compare_linetypes", c("solid", "dashed")),
     linewidth  = if (!is.null(linewidth))  linewidth  else (acl_theme("compare_linewidth")  %||% 1.2),
     point_size = if (!is.null(point_size)) point_size else (acl_theme("compare_point_size") %||% 2),
@@ -496,7 +559,7 @@ acl_theme_reset <- function() {
 #' Internal: Build ggplot2 theme object from acl_theme()
 #'
 #' This is the function called by plot functions via
-#' \code{get("acl_get_theme", envir = asNamespace("ACL"))()}.
+#' \code{get("acl_get_theme", envir = asNamespace("ALSCL"))()}.
 #'
 #' @return A list of ggplot2 theme layers.
 #' @keywords internal

@@ -8,10 +8,10 @@ plot_VB(
   model_result,
   age_range = c(1, 25),
   line_size = 1.2,
-  line_color = "red",
+  line_color = NULL,
   line_type = "solid",
   se = FALSE,
-  se_color = "red",
+  se_color = NULL,
   se_alpha = 0.2,
   se_type = c("ribbon", "errorbar"),
   text_color = "black",
@@ -37,13 +37,13 @@ plot_VB(
 
 \item{line_size}{Numeric. The thickness of the line in the plot. Default is 1.2.}
 
-\item{line_color}{Character. The color of the line in the plot. Default is "black".}
+\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
 \item{line_type}{Character. The type of the line in the plot. Default is "solid".}
 
 \item{se}{Logical. Whether to calculate and plot standard error as confidence intervals. Default is FALSE.}
 
-\item{se_color}{Character. The color of the confidence interval ribbon. Default is "blue".}
+\item{se_color}{Character or NULL. NULL inherits the global se_color setting.}
 
 \item{se_alpha}{Numeric. The transparency of the confidence interval ribbon. Default is 0.2.}
 
@@ -59,7 +59,7 @@ plot_VB(
 
 \item{ylab}{Character or NULL. Custom y-axis label. If NULL, uses global theme setting.}
 
-\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "Arial").}
+\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 
 \item{title_size}{Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).}
 

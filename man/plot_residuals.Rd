@@ -7,9 +7,9 @@
 plot_residuals(
   model_result,
   f = 0.4,
-  line_color = "black",
-  smooth_color = "blue",
-  hline_color = "red",
+  line_color = NULL,
+  smooth_color = NULL,
+  hline_color = NULL,
   line_size = 1,
   facet_scales = "free",
   facet_ncol = NULL,
@@ -35,13 +35,14 @@ plot_residuals(
 a "resid_index" component, representing the residuals for each index.}
 
 \item{f}{Numeric. The smoother span for the loess smooth line in the plot. This gives the proportion of points in the plot which
-influence the smooth at each value. Larger values result in more smoothing. Default is 0.4.}
+influence the smooth at each value. Larger values result in more smoothing. Default is 0.4.
+Sparse facets use a linear trend; otherwise the span is enlarged when needed for at least five neighbors.}
 
-\item{line_color}{Character. The color of the line in the plot. Default is "black".}
+\item{line_color}{Character or NULL. NULL inherits the global line_color setting.}
 
-\item{smooth_color}{Character. The color of the smooth line in the plot. Default is "blue".}
+\item{smooth_color}{Character or NULL. NULL inherits the global smooth_color setting.}
 
-\item{hline_color}{Character. The color of the horizontal line (at y=0) in the plot. Default is "red".}
+\item{hline_color}{Character or NULL. NULL inherits the global hline_color setting.}
 
 \item{line_size}{Numeric. The size of the lines in the plot. Default is 1.}
 
@@ -64,7 +65,7 @@ plot. Default is NULL (no capping). A value of 1 is a reasonable starting point.
 
 \item{ylab}{Character or NULL. Custom y-axis label. If NULL, uses global theme setting.}
 
-\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "Arial").}
+\item{font_family}{Character or NULL. Custom font family. If NULL, uses global theme setting (default "sans").}
 
 \item{title_size}{Numeric or NULL. Plot title size in pt. If NULL, uses global theme (default 14).}
 

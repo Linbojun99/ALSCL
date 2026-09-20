@@ -1,67 +1,42 @@
-#' Diagnostic function for ACL
-#'
-#' @param data.CatL A matrix containing the length grouping of the catch length,
-#' which represents the observed catch data in different length groups across years.
-#' @param model_result A list that contains the model output. The list should have a "report" component which contains an "Elog_index" component representing counts in length groups.
-#' @return A list containing the calculated metrics: MSE, MAE, RMSE, Rsquared, MAPE, exp_var_score, max_error
+#' Compute survey-fit and information-criterion diagnostics
+#' @param data.CatL Length labels followed by time columns.
+#' @param model_result A fitted ACL or ALSCL result.
+#' @return A data frame with Metric and Value. Undefined metrics are NA.
+#' @details Only finite positive observations are included. MASE divides MAE by
+#'   the pooled absolute one-step differences within each length-bin time series;
+#'   pairs containing missing or zero observations are excluded. MAD is the mean
+#'   absolute deviation of observations about their mean.
 #' @export
-#' @examples
-#' \dontrun{
-#' diagnostic_metrics(data.CatL, model_result)
-#' }
 diagnostic_metrics <- function(data.CatL, model_result) {
-  observed_data <-data.CatL[,2:ncol(data.CatL)]
-  Elog_index <- model_result[["report"]][["Elog_index"]]
-  estimated_data<-exp(Elog_index)
-  # Remove observations equal to 0, and remove the corresponding predicted values
-  non_zero_indices <- observed_data != 0
-  observed_data <- observed_data[non_zero_indices]
-  estimated_data <- estimated_data[non_zero_indices]
-  # Calculation error
-  errors <- observed_data - estimated_data
-  # Calculation MSE
-  MSE <- mean(errors^2)
-  # Calculation MAE
-  MAE <- mean(abs(errors))
-
-  # Calculation MASE
-  MAD <- mean(abs(errors-mean(observed_data)))
-  MASE <- MAE/MAD
-
-  # Calculation RMSE
-  RMSE <- sqrt(MSE)
-
-  # Calculate the sum of squared residuals
-  sse <- sum(errors^2)
-  # Calculate the total sum of squares
-  sst <- sum((observed_data - mean(observed_data))^2)
-  # Calculate R-squared
-  Rsquared <- 1 - sse/sst
-  # Calculate MAPE
-  MAPE <- mean(abs((observed_data - estimated_data) / observed_data)) * 100
-
-  # Calculate SMAPE
-  SMAPE <- mean(abs(observed_data - estimated_data)/((abs(observed_data)+abs(estimated_data))/2)) * 100
-
-  # Calculate Explained Variance Score
-  exp_var_score <- 1 - var(observed_data - estimated_data) / var(observed_data)
-
-  # Calculate Max Error
-  max_error <- max(abs(observed_data - estimated_data))
-
-  #Calculate the parameters number
-  par_num <- length(model_result[["obj"]][["par"]])
-
-  #Calculate the catch-at-length number
-  cl_num <- length(observed_data)
-
-  #Calculate the AIC and BIC
-  AIC=2*par_num+2*(model_result[["opt"]][["objective"]])
-  BIC=par_num*log(cl_num)+2*(model_result[["opt"]][["objective"]])
-
-
-  # Create a data frame with the results
-  diagnostics <- data.frame(Metric = c("MSE", "MAE","MAD","MASE", "RMSE", "Rsquared", "MAPE", "SMAPE", "Explained Variance Score", "Max Error","AIC","BIC"),
-                            Value = c(MSE, MAE, MAD, MASE, RMSE, Rsquared, MAPE, SMAPE, exp_var_score, max_error, AIC, BIC))
-  return(diagnostics)
+  observed <- as.matrix(data.CatL[, -1L, drop = FALSE]); storage.mode(observed) <- "double"
+  predicted <- exp(model_result$report$Elog_index)
+  if (!identical(dim(observed), dim(predicted))) stop("Observed and predicted dimensions differ.")
+  idx <- is.finite(observed) & observed > 0
+  if (!any(idx)) stop("No positive finite observations are available.")
+  if (any(!is.finite(predicted[idx]))) stop("Predictions are non-finite at observed cells.")
+  obs <- observed[idx]; pred <- predicted[idx]; errors <- obs - pred
+  mse <- mean(errors^2); mae <- mean(abs(errors)); sst <- sum((obs-mean(obs))^2)
+  scale <- NA_real_
+  if (ncol(observed) > 1L) {
+    pairs <- idx[, -1L, drop=FALSE] & idx[, -ncol(idx), drop=FALSE]
+    differences <- abs(observed[, -1L, drop=FALSE] - observed[, -ncol(observed), drop=FALSE])
+    if (any(pairs)) scale <- mean(differences[pairs])
+  }
+  npar <- length(model_result$opt$par)
+  if (!npar) npar <- length(model_result$obj$par)
+  nll <- model_result$opt$objective
+  values <- c(MSE=mse, MAE=mae, MAD=mean(abs(obs-mean(obs))),
+    MASE=if(is.finite(scale) && scale>0) mae/scale else NA_real_, RMSE=sqrt(mse),
+    Rsquared=if(sst>0) 1-sum(errors^2)/sst else NA_real_, MAPE=100*mean(abs(errors/obs)),
+    SMAPE=100*mean(2*abs(errors)/(abs(obs)+abs(pred))),
+    'Explained Variance Score'=if(length(obs)>1L && stats::var(obs)>0) 1-stats::var(errors)/stats::var(obs) else NA_real_,
+    'Max Error'=max(abs(errors)), AIC=2*npar+2*nll, BIC=npar*log(length(obs))+2*nll)
+  data.frame(Metric=names(values),Value=unname(values),row.names=NULL)
+}
+.acl_max_gradient <- function(m) {
+  x <- m$gradient
+  if (is.null(x)) x <- m$max_abs_gradient
+  if (is.null(x)) x <- m$final_outer_mgc
+  if (is.null(x) || !length(x) || any(!is.finite(x))) return(NA_real_)
+  max(abs(x))
 }
