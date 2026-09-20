@@ -1,5 +1,7 @@
 # ALSCL 完整使用手册 · Complete user manual
 
+<img src="https://github.com/Linbojun99/ALSCL/blob/main/ALSCLlogo.png?raw=true" alt="ALSCL logo" align="right" height="140" />
+
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
 **ALSCL 2.0.0 · 简体中文与英文 · 15 章 / chapters**

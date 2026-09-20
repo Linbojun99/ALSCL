@@ -1,5 +1,7 @@
 # ALSCL 完整使用手册 · Complete user manual
 
+<img src="https://github.com/Linbojun99/ALSCL/blob/main/ALSCLlogo.png?raw=true" alt="ALSCL logo" align="right" height="140" />
+
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
 
 **ALSCL 2.0.0 · 简体中文与英文 · 15 章 / chapters**
@@ -30,6 +32,16 @@ This manual covers model principles, data, simulation, fitting, diagnostics, plo
 | 14 | [全部函数与参数 · Complete function reference](https://github.com/Linbojun99/ALSCL/wiki/14-Function-Reference) |
 | 15 | [进阶、复现与故障处理 · Reproducibility](https://github.com/Linbojun99/ALSCL/wiki/15-Reproducibility) |
 
-![NPG 回溯示例 · Retrospective example](https://github.com/Linbojun99/ALSCL/blob/main/docs/figures/ytf/retro_ALSCL.png?raw=true)
+## 相关链接 · Links
+
+**张帆教授 · Prof. Fan Zhang**
+
+- [个人主页 · Faculty homepage](https://hyxy.shou.edu.cn/2021/0721/c18717a291861/page.htm)
+- [GitHub · fzhang-shou](https://github.com/fzhang-shou)
+- 邮箱 · Email: [f-zhang@shou.edu.cn](mailto:f-zhang@shou.edu.cn)
+
+**董思宋 · Sisong Dong**
+
+- [GitHub · dongworks97](https://github.com/dongworks97)
 
 理论来源 / Reference: Zhang & Cadigan (2022), *Fish and Fisheries* 23,1121–1135. [Paper and Appendix S1](https://doi.org/10.1111/faf.12673).
