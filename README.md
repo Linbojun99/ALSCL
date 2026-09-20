@@ -130,7 +130,7 @@ ACL estimates F by age, whereas ALSCL estimates F by length. With $`s`$ denoting
 
 ```math
 F_{s,t}=\exp(\mu_F+d_{s,t}),\qquad
-\operatorname{Cov}(d_{s,t},d_{s-h,t-j})=\sigma_F^2\phi_S^{|h|}\phi_T^{|j|}.
+\mathrm{Cov}(d_{s,t},d_{s-h,t-j})=\sigma_F^2\phi_S^{|h|}\phi_T^{|j|}.
 ```
 
 这里 $`\sigma_F`$ 是 TMB `SCALE(SEPARABLE(AR1(),AR1()), sigma_F)` 中的**边际标准差**；$`\phi_S`$、$`\phi_T`$ 分别控制组间和时间相关性。若用创新方差定义 AR(1)，协方差公式的尺度会不同；不能在本式中再除以两个 $`1-\phi^2`$ 因子。自然死亡率 M 作为已知输入。
@@ -410,7 +410,7 @@ The full reference documents every public argument and the inner estimation para
 
 每图均有可运行 R 代码、双语解读和调整参数。这里列出用途、主要类型及代表图；[完整图谱](docs/PLOT_GALLERY.md) 展示所有 45 张图。以下使用快速开始得到的 `a`、`b`。
 
-Each function has runnable examples and interpretation in the gallery. This overview retains all original README plotting topics and adds model comparisons.
+Each function has runnable examples and interpretation in the gallery. This section introduces each plotting family and its main controls.
 
 ### `plot_recruitment()` · 补充量 / Recruitment
 
@@ -599,9 +599,9 @@ plot_SSB(b, se=TRUE, line_color="#00A087", se_color="#00A087")
 acl_theme_reset() # 真正重置；acl_theme_set() 无参数不重置 / Explicit reset
 ```
 
-支持 NPG、AAAS、NEJM、Lancet、JAMA。切换色板重设颜色角色，同次调用的显式颜色优先；旧 viridis 等选项仍可在相应图使用。见 [完整配色与导出教程](docs/PLOT_STYLE.md)。
+支持 NPG、AAAS、NEJM、Lancet、JAMA。切换色板重设颜色角色，同次调用的显式颜色优先；山脊图独立使用 viridis 年份渐变。见 [完整配色与导出教程](docs/PLOT_STYLE.md)。
 
-Palette changes reset semantic colors, with explicit same-call colors taking precedence. Legacy palette options remain supported in the corresponding functions.
+Palette changes reset semantic colors, with explicit same-call colors taking precedence. Ridges independently use a sequential viridis gradient across years.
 
 <a id="parallel"></a>
 ## 并行处理 / Parallel processing

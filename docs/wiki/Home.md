@@ -1,6 +1,7 @@
 # ALSCL 完整使用手册 · Complete user manual
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
+
 **ALSCL 2.0.0 · 简体中文与英文 · 15 章 / chapters**
 
 本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图和 7 张案例图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。

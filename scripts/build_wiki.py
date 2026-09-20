@@ -121,6 +121,7 @@ contents='\n'.join(f'| {i+1:02d} | [{title}]({base}/wiki/{slug}) |' for i,(slug,
 home=f'''# ALSCL 完整使用手册 · Complete user manual
 
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
+
 **ALSCL 2.0.0 · 简体中文与英文 · 15 章 / chapters**
 
 本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图和 7 张案例图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
@@ -142,7 +143,7 @@ This manual covers model principles, data, simulation, fitting, diagnostics, plo
 (out/'Home.md').write_text(home)
 (out/'_Sidebar.md').write_text('**ALSCL · 使用手册 / Manual**\n\n'+f'[首页与目录 · Home]({base}/wiki)\n\n'+'\n'.join(f'- [{i+1:02d} {title}]({base}/wiki/{slug})' for i,(slug,title,_) in enumerate(chapters))+f'\n\n[代码与数据 · Code and data]({base}/tree/main)\n')
 (out/'_Footer.md').write_text(f'[目录 · Contents]({base}/wiki) · [代码 · Code]({base}/tree/main) · [问题反馈 · Issues]({base}/issues)\n\nALSCL 2.0.0 · 简体中文 / English · [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673)\n')
-book=['# ALSCL 完整使用手册 · Complete user manual','',home.split('## 目录 · Contents')[0], '## 全书目录 · Book contents','']
+book=[home.split('## 目录 · Contents')[0], '## 全书目录 · Book contents','']
 book+= [f'- [{i+1:02d} {title}](#chapter-{i+1:02d})' for i,(_,title,_) in enumerate(chapters)]
 for i,(slug,title,body) in enumerate(chapters):
  if slug=='02-Theory':body=re.sub(r'(?m)^### 1[.]', '### 2.', body)

@@ -1,8 +1,7 @@
 # ALSCL 完整使用手册 · Complete user manual
 
-# ALSCL 完整使用手册 · Complete user manual
-
 **调查体长数据的种群评估 · Survey catch-at-length stock assessment**
+
 **ALSCL 2.0.0 · 简体中文与英文 · 15 章 / chapters**
 
 本手册介绍模型原理、输入数据、模拟、拟合、诊断、绘图及回溯分析，提供双语 R 示例、Excel 填表示例、45 张 YTF 图和 7 张案例图。普通图使用 ggsci 配色；山脊图使用按年份排列的 viridis 渐变。
@@ -90,7 +89,7 @@ ACL estimates F by age, whereas ALSCL estimates F by length. With $`s`$ denoting
 
 ```math
 F_{s,t}=\exp(\mu_F+d_{s,t}),\qquad
-\operatorname{Cov}(d_{s,t},d_{s-h,t-j})=\sigma_F^2\phi_S^{|h|}\phi_T^{|j|}.
+\mathrm{Cov}(d_{s,t},d_{s-h,t-j})=\sigma_F^2\phi_S^{|h|}\phi_T^{|j|}.
 ```
 
 这里 $`\sigma_F`$ 是 TMB `SCALE(SEPARABLE(AR1(),AR1()), sigma_F)` 中的**边际标准差**；$`\phi_S`$、$`\phi_T`$ 分别控制组间和时间相关性。若用创新方差定义 AR(1)，协方差公式的尺度会不同；不能在本式中再除以两个 $`1-\phi^2`$ 因子。自然死亡率 M 作为已知输入。
