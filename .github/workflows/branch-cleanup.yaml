@@ -1,0 +1,44 @@
+name: Clean merged documentation branch
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/branch-cleanup.yaml]
+permissions:
+  contents: write
+  pull-requests: read
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify merge and remove its source branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request, urllib.parse
+          root = "https://api.github.com/repos/" + os.environ["GH_REPO"]
+          def api(path, method="GET"):
+              req = urllib.request.Request(root + path, method=method, headers={
+                  "Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28"})
+              with urllib.request.urlopen(req) as response:
+                  data = response.read()
+                  return json.loads(data) if data else None
+          pr = api("/pulls/2")
+          assert pr["merged"] and pr["base"]["ref"] == "main", "PR must be merged into main"
+          assert pr["head"]["repo"]["full_name"] == os.environ["GH_REPO"], "Unexpected repository"
+          name = pr["head"]["ref"]
+          assert name != "main" and name != api("")["default_branch"], "Cannot delete default branch"
+          expected = "b35692a3114b60558407bf121879fe7663a33e4a"
+          path = "/git/refs/heads/" + urllib.parse.quote(name, safe="")
+          assert api(path)["object"]["sha"] == expected, "Source branch changed"
+          source = api("/git/commits/" + expected)
+          merged = api("/git/commits/" + pr["merge_commit_sha"])
+          assert source["tree"]["sha"] == merged["tree"]["sha"], "Merged content differs"
+          api(path, "DELETE")
+          remaining = api("/branches?per_page=100")
+          assert all(branch["name"] != name for branch in remaining), "Branch still exists"
+          print("Removed the merged source branch. Remaining branches:", [b["name"] for b in remaining])
+          PY
