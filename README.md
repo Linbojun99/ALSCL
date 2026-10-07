@@ -5,6 +5,10 @@
 [![License: GPL-3](https://img.shields.io/badge/License-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 <!-- badges: end -->
 
+**Documentation:** [English](https://linbojun99.github.io/ALSCL/) · [简体中文](https://linbojun99.github.io/ALSCL/zh/) · [Function reference](https://linbojun99.github.io/ALSCL/reference/)
+
+The documentation website includes tutorials, worked figures and all public functions, with a language switch on every page. [Website build and publishing instructions](website/README.md).
+
 **基于年龄及体长结构的统计调查体长种群评估模型**
 
 **Age-based and Length-based Statistical Catch-at-Length Models for Fish Stock Assessment**

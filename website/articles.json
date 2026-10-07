@@ -1,0 +1,122 @@
+[
+  {
+    "slug": "getting-started",
+    "title": {
+      "en": "Getting started",
+      "zh": "开始使用"
+    },
+    "source": "docs/wiki/01-Start.md"
+  },
+  {
+    "slug": "model-theory",
+    "title": {
+      "en": "Model principles",
+      "zh": "模型原理与时间尺度"
+    },
+    "source": "docs/wiki/02-Theory.md"
+  },
+  {
+    "slug": "data-preparation",
+    "title": {
+      "en": "Data and observations",
+      "zh": "数据、Excel 与实测导入"
+    },
+    "source": "docs/wiki/03-Data-and-Excel.md"
+  },
+  {
+    "slug": "first-model",
+    "title": {
+      "en": "Built-in YTF",
+      "zh": "内置数据与首个拟合"
+    },
+    "source": "docs/wiki/04-Built-in-YTF.md"
+  },
+  {
+    "slug": "simulation",
+    "title": {
+      "en": "Simulation",
+      "zh": "模拟与批量实验"
+    },
+    "source": "docs/wiki/05-Simulation.md"
+  },
+  {
+    "slug": "fitting-controls",
+    "title": {
+      "en": "Fitting controls",
+      "zh": "初值、边界与拟合"
+    },
+    "source": "docs/wiki/06-Fitting.md"
+  },
+  {
+    "slug": "diagnostics",
+    "title": {
+      "en": "Diagnostics",
+      "zh": "诊断与结果解读"
+    },
+    "source": "docs/wiki/07-Diagnostics.md"
+  },
+  {
+    "slug": "population-plots",
+    "title": {
+      "en": "Survey and population plots",
+      "zh": "调查与种群图"
+    },
+    "source": "docs/wiki/08-Population-Plots.md"
+  },
+  {
+    "slug": "growth-mortality",
+    "title": {
+      "en": "Growth, mortality and residuals",
+      "zh": "生长、死亡与残差图"
+    },
+    "source": "docs/wiki/09-Growth-and-Mortality.md"
+  },
+  {
+    "slug": "model-comparison",
+    "title": {
+      "en": "Model comparisons",
+      "zh": "模型比较与真值"
+    },
+    "source": "docs/wiki/10-Model-Comparisons.md"
+  },
+  {
+    "slug": "retrospectives",
+    "title": {
+      "en": "Retrospectives",
+      "zh": "回溯分析"
+    },
+    "source": "docs/wiki/11-Retrospectives.md"
+  },
+  {
+    "slug": "case-studies",
+    "title": {
+      "en": "Annual and quarterly cases",
+      "zh": "年度与季度案例"
+    },
+    "source": "docs/wiki/12-Case-Studies.md"
+  },
+  {
+    "slug": "plot-customization",
+    "title": {
+      "en": "Colors and export",
+      "zh": "ggsci 配色与导出"
+    },
+    "source": "docs/wiki/13-Colors-and-Export.md"
+  },
+  {
+    "slug": "reproducibility",
+    "title": {
+      "en": "Reproducibility",
+      "zh": "进阶、复现与故障处理"
+    },
+    "source": "docs/wiki/15-Reproducibility.md"
+  },
+  {
+    "slug": "estimation-parameters",
+    "title": {
+      "en": "Estimation parameter lists",
+      "zh": "估计参数列表"
+    },
+    "source": "docs/FUNCTION_REFERENCE.md"
+  }
+]

@@ -12,3 +12,6 @@
 ^scripts$
 ^LICENSE$
 ^ALSCLlogo\.png$
+^website$
+^_site$
+^\.venv-docs$
