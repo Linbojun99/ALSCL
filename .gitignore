@@ -9,3 +9,8 @@
 *.tar.gz
 *.Rcheck/
 output/
+_site/
+website/.build/
+website/__pycache__/
+website/assets/katex/
+.venv-docs/

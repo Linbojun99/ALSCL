@@ -1,0 +1,777 @@
+{
+  "run_acl": {
+    "description": {
+      "en": "Fit the age-structured survey catch-at-length model using TMB and maximum marginal likelihood. Supply aligned survey, mean-weight and maturity tables.",
+      "zh": "使用 TMB 和最大边际似然拟合年龄结构调查体长模型。输入调查数量指数、平均个体重量和成熟比例三张对齐的数据表。"
+    },
+    "value": {
+      "en": "A fitted-model list. `report` contains population quantities and predictions; `opt` contains optimizer parameters, objective and status; `obj` is the live TMB objective; `est_std` and `vcov` contain approximate uncertainty. Inspect `pdHess`, `gradient`, `max_abs_gradient`, `convergence_code` and `bound_hit`. Metadata include time, age, length bins, `growth_step`, elapsed time and multistart diagnostics.",
+      "zh": "拟合结果列表。`report` 包含种群量和预测；`opt` 包含优化参数、目标函数和状态；`obj` 是当前会话的 TMB 目标函数；`est_std` 和 `vcov` 包含近似不确定性。应检查 `pdHess`、`gradient`、`max_abs_gradient`、`convergence_code` 和 `bound_hit`。另含时间、年龄、体长组、`growth_step`、耗时及多起点诊断。"
+    },
+    "details": {
+      "en": "Natural and fishing mortality are instantaneous rates per model step; growth k is annual. Fixing survey catchability anchors the abundance scale. Zeros are excluded with `zero_action=\"missing\"`; decide whether that is appropriate for your observations. `ncores` controls independent starts, while `train_times` controls successive optimizer passes. A zero convergence code alone does not establish reliable inference. Keep the DLL loaded to evaluate `obj` in the same R session.",
+      "zh": "自然死亡率和捕捞死亡率是每个模型时间步的瞬时率，生长 k 以年为单位。固定调查可捕性决定丰度尺度。`zero_action=\"missing\"` 会排除零值，使用前应判断是否符合观测含义。`ncores` 控制独立起点数，`train_times` 控制每个起点的连续优化次数。优化码为零并不单独证明统计推断可靠。`obj` 依赖当前 R 会话内保持加载的动态库。"
+    },
+    "articles": [
+      "first-model",
+      "fitting-controls",
+      "diagnostics",
+      "model-theory"
+    ]
+  },
+  "run_alscl": {
+    "description": {
+      "en": "Fit the joint age–length survey catch-at-length model using TMB and maximum marginal likelihood. Supply aligned survey, mean-weight and maturity tables.",
+      "zh": "使用 TMB 和最大边际似然拟合年龄—体长联合结构调查体长模型。输入调查数量指数、平均个体重量和成熟比例三张对齐的数据表。"
+    },
+    "value": {
+      "en": "A fitted-model list. `report` contains population quantities and predictions; `opt` contains optimizer parameters, objective and status; `obj` is the live TMB objective; `est_std` and `vcov` contain approximate uncertainty. Inspect `pdHess`, `gradient`, `max_abs_gradient`, `convergence_code` and `bound_hit`. Metadata include time, age, length bins, `growth_step`, elapsed time and multistart diagnostics.",
+      "zh": "拟合结果列表。`report` 包含种群量和预测；`opt` 包含优化参数、目标函数和状态；`obj` 是当前会话的 TMB 目标函数；`est_std` 和 `vcov` 包含近似不确定性。应检查 `pdHess`、`gradient`、`max_abs_gradient`、`convergence_code` 和 `bound_hit`。另含时间、年龄、体长组、`growth_step`、耗时及多起点诊断。"
+    },
+    "details": {
+      "en": "Natural and fishing mortality are instantaneous rates per model step; growth k is annual. Fixing survey catchability anchors the abundance scale. Zeros are excluded with `zero_action=\"missing\"`; decide whether that is appropriate for your observations. `ncores` controls independent starts, while `train_times` controls successive optimizer passes. A zero convergence code alone does not establish reliable inference. Keep the DLL loaded to evaluate `obj` in the same R session.",
+      "zh": "自然死亡率和捕捞死亡率是每个模型时间步的瞬时率，生长 k 以年为单位。固定调查可捕性决定丰度尺度。`zero_action=\"missing\"` 会排除零值，使用前应判断是否符合观测含义。`ncores` 控制独立起点数，`train_times` 控制每个起点的连续优化次数。优化码为零并不单独证明统计推断可靠。`obj` 依赖当前 R 会话内保持加载的动态库。"
+    },
+    "articles": [
+      "first-model",
+      "fitting-controls",
+      "diagnostics",
+      "model-theory"
+    ]
+  },
+  "create_parameters": {
+    "description": {
+      "en": "Construct estimation starting values and lower/upper bounds, optionally using a species preset.",
+      "zh": "创建估计初值及上下界，可选择物种预设。"
+    },
+    "value": {
+      "en": "A list with `parameters`, `parameters.L` and `parameters.U`, containing named values on the optimizer scale.",
+      "zh": "含 `parameters`、`parameters.L`、`parameters.U` 的列表；各命名值均在优化器尺度上。"
+    },
+    "details": {
+      "en": "Species presets are estimation starting points, not input data or automatically applied biological assumptions. `create_parameters_alscl()` selects the ALSCL parameterization. ACL uses `t0`; ALSCL uses `log_t0`. Use named arguments and pass the resulting lists to the fitting function.",
+      "zh": "物种预设提供估计起点，不会自动更改观测数据、自然死亡率、年龄网格或调查可捕性。`create_parameters_alscl()` 选择 ALSCL 参数化。ACL 使用 `t0`，ALSCL 使用 `log_t0`。建议使用命名参数，并将返回列表传给拟合函数。"
+    },
+    "articles": [
+      "estimation-parameters",
+      "fitting-controls"
+    ]
+  },
+  "create_parameters_alscl": {
+    "description": {
+      "en": "Construct estimation starting values and lower/upper bounds, optionally using a species preset.",
+      "zh": "创建估计初值及上下界，可选择物种预设。"
+    },
+    "value": {
+      "en": "A list with `parameters`, `parameters.L` and `parameters.U`, containing named values on the optimizer scale.",
+      "zh": "含 `parameters`、`parameters.L`、`parameters.U` 的列表；各命名值均在优化器尺度上。"
+    },
+    "details": {
+      "en": "Species presets are estimation starting points, not input data or automatically applied biological assumptions. `create_parameters_alscl()` selects the ALSCL parameterization. ACL uses `t0`; ALSCL uses `log_t0`. Use named arguments and pass the resulting lists to the fitting function.",
+      "zh": "物种预设提供估计起点，不会自动更改观测数据、自然死亡率、年龄网格或调查可捕性。`create_parameters_alscl()` 选择 ALSCL 参数化。ACL 使用 `t0`，ALSCL 使用 `log_t0`。建议使用命名参数，并将返回列表传给拟合函数。"
+    },
+    "articles": [
+      "estimation-parameters",
+      "fitting-controls"
+    ]
+  },
+  "generate_map": {
+    "description": {
+      "en": "Merge the default ACL parameter map with custom fixes and releases.",
+      "zh": "合并 ACL 默认参数映射与自定义的固定或释放设置。"
+    },
+    "value": {
+      "en": "A named list of TMB factor mappings.",
+      "zh": "由 TMB factor 映射组成的命名列表。"
+    },
+    "details": {
+      "en": "`factor(NA)` fixes a parameter at the supplied initial value. A named `NULL` releases a default fixed parameter; unspecified default mappings remain. This helper uses ACL defaults. Use model-specific names when specifying an ALSCL map.",
+      "zh": "`factor(NA)` 将参数固定在所给初值。命名项 `NULL` 可释放默认固定的参数，未指定的默认映射仍保留。本辅助函数使用 ACL 默认值；ALSCL 映射必须使用该模型的参数名称。"
+    },
+    "articles": [
+      "fitting-controls",
+      "estimation-parameters"
+    ]
+  },
+  "VB_func": {
+    "description": {
+      "en": "Evaluate the von Bertalanffy mean length-at-age curve.",
+      "zh": "计算 von Bertalanffy 平均体长—年龄曲线。"
+    },
+    "value": {
+      "en": "A numeric vector of mean lengths, corresponding to `age`.",
+      "zh": "与 `age` 对应的平均体长数值向量。"
+    },
+    "details": {
+      "en": "Computes `Linf * (1 - exp(-k * (age - t0)))`. Use years for age and t0 and inverse years for k. The result describes mean growth, without individual variation or parameter uncertainty.",
+      "zh": "计算 `Linf * (1 - exp(-k * (age - t0)))`。age 与 t0 使用年，k 使用每年。结果表示平均生长，不含个体差异或参数估计不确定性。"
+    },
+    "articles": [
+      "model-theory",
+      "fitting-controls"
+    ]
+  },
+  "mat_func": {
+    "description": {
+      "en": "Evaluate a logistic curve defined by lengths at 50% and 95%.",
+      "zh": "根据 50% 与 95% 对应体长计算 logistic 曲线。"
+    },
+    "value": {
+      "en": "A numeric vector of proportions at the supplied lengths.",
+      "zh": "所给体长对应的比例数值向量。"
+    },
+    "details": {
+      "en": "Supply `L95 > L50`. Used for maturity and, in the simulator, catchability/selectivity curves. The same equation does not make these biological concepts interchangeable.",
+      "zh": "应满足 `L95 > L50`。函数可用于成熟比例，模拟器也用其构造可捕性或选择性曲线。数学表达式相同，不代表这些生物学概念相同。"
+    },
+    "articles": [
+      "model-theory",
+      "simulation"
+    ]
+  },
+  "initialize_params": {
+    "description": {
+      "en": "Build biological and process settings for a simulation operating model.",
+      "zh": "创建模拟操作模型的生物参数和过程设置。"
+    },
+    "value": {
+      "en": "A named parameter list with species, age/time/length grids, growth, mortality, recruitment, observation and process settings.",
+      "zh": "包含物种、年龄/时间/体长网格、生长、死亡率、补充、观测和过程设置的命名参数列表。"
+    },
+    "details": {
+      "en": "Species presets select the operating-model structure: flatfish and krill use age_based; tuna uses length_based. Inspect the returned model_type, then call sim_cal() and sim_data(). These simulation labels differ from the estimator choices acl and alscl. The simulator and estimator recruitment processes differ.",
+      "zh": "物种预设决定操作模型结构：flatfish 和 krill 使用 age_based，tuna 使用 length_based。检查返回的 model_type，再调用 sim_cal() 与 sim_data()。模拟结构标签与估计模型 acl、alscl 不同；模拟器与估计器的补充过程也不同。"
+    },
+    "articles": [
+      "simulation",
+      "case-studies"
+    ]
+  },
+  "sim_cal": {
+    "description": {
+      "en": "Derive biological arrays and transition matrices from simulation parameters.",
+      "zh": "从模拟参数计算生物数组和转移矩阵。"
+    },
+    "value": {
+      "en": "A list including `model_type`, `LatA`, `W_at_len`, `mat`, `q_surv`, `sel`, `pla`, length-bin metadata, and `Gij` for length-based models.",
+      "zh": "列表包含 `model_type`、`LatA`、`W_at_len`、`mat`、`q_surv`、`sel`、`pla`、体长组信息；长度结构模型另含 `Gij`。"
+    },
+    "details": {
+      "en": "`pla` describes length given age; `Gij` describes transitions from one length group to another. Check matrix orientation for the chosen simulation model before using arrays outside the supplied workflow. Call again after modifying biological parameters.",
+      "zh": "`pla` 表示给定年龄的体长分布，`Gij` 表示体长组间转移。若在内置流程之外使用数组，应核对所选模拟模型的矩阵方向。修改生物参数后需要重新计算。"
+    },
+    "articles": [
+      "simulation",
+      "model-theory"
+    ]
+  },
+  "sim_data": {
+    "description": {
+      "en": "Simulate population dynamics, survey observations and known truth after burn-in.",
+      "zh": "模拟预热后的种群动态、调查观测及已知真值。"
+    },
+    "value": {
+      "en": "The requested replicate in memory when selected with `return_iter`; simulated output includes `SN_at_len`, `N_at_len`, `N_at_age`, `SSB` and supporting metadata. Replicate files are written to `output_dir`.",
+      "zh": "用 `return_iter` 选择需要在内存中返回的重复；模拟结果包含 `SN_at_len`、`N_at_len`、`N_at_age`、`SSB` 等数据和信息。各重复文件写入 `output_dir`。"
+    },
+    "details": {
+      "en": "Pass consistent outputs from `initialize_params()` and `sim_cal()`. `iter_range` selects replicate seeds. The operating model uses a stock–recruitment process that should not be confused with the fitted log-recruitment model.",
+      "zh": "传入一致的 `initialize_params()` 和 `sim_cal()` 结果。`iter_range` 指定模拟重复及其种子。操作模型的亲体—补充过程应与拟合器的对数补充过程区分。"
+    },
+    "articles": [
+      "simulation",
+      "case-studies"
+    ]
+  },
+  "simulate_example_data": {
+    "description": {
+      "en": "Generate small annual teaching datasets in the three-table input format.",
+      "zh": "快速生成三表格式的年度教学数据。"
+    },
+    "value": {
+      "en": "A list with `data.CatL`, `data.wgt`, `data.mat` and `true_params`.",
+      "zh": "含 `data.CatL`、`data.wgt`、`data.mat`、`true_params` 的列表。"
+    },
+    "details": {
+      "en": "Set a seed for reproducible examples. `cv_catch` is an observation CV, not a log-scale SD. Use `initialize_params()` → `sim_cal()` → `sim_data()` for the full age- or length-based operating model and quarterly scenarios. `save_csv=TRUE` writes the three tables.",
+      "zh": "设置种子可复现结果。`cv_catch` 是观测 CV，并非对数尺度 SD。完整年龄或长度结构模拟及季度场景应使用 `initialize_params()` → `sim_cal()` → `sim_data()`。`save_csv=TRUE` 会写出三张表。"
+    },
+    "articles": [
+      "simulation",
+      "data-preparation"
+    ]
+  },
+  "sim_acl": {
+    "description": {
+      "en": "Fit ACL to a collection of saved simulation replicates.",
+      "zh": "对已保存的模拟重复批量拟合 ACL。"
+    },
+    "value": {
+      "en": "A named list, one element per replicate (`result_rep_<id>`). Successful fits are also saved to disk; failures contain `converge=\"FAILED\"`, `error` and `iter`.",
+      "zh": "按重复命名的列表（`result_rep_<id>`）。成功拟合另写入磁盘；失败项包含 `converge=\"FAILED\"`、`error`、`iter`。"
+    },
+    "details": {
+      "en": "Generate `sim_rep<id>` files with `sim_data()` first. `ncores` distributes replicates, rather than supplying multiple starts inside each fit. Check failures before calculating performance statistics and do not silently discard difficult replicates.",
+      "zh": "先通过 `sim_data()` 生成 `sim_rep<id>` 文件。`ncores` 分配模拟重复，不表示每个内部拟合的多起点数。计算性能指标前应检查失败项，不能不加说明地舍弃困难重复。"
+    },
+    "articles": [
+      "simulation",
+      "reproducibility"
+    ]
+  },
+  "diagnose_model": {
+    "description": {
+      "en": "Summarize survey fit and numerical convergence.",
+      "zh": "汇总调查拟合与数值收敛诊断。"
+    },
+    "value": {
+      "en": "A data frame of metrics. Undefined metrics are `NA`; `diagnose_model()` also includes numerical diagnostics.",
+      "zh": "指标数据框。未定义指标为 `NA`；`diagnose_model()` 另包含数值诊断。"
+    },
+    "details": {
+      "en": "Only finite positive survey observations enter prediction metrics. Predictions are `exp(Elog_index)`, the median on the original scale, without lognormal mean correction. MASE uses within-length one-step differences. AIC/BIC count free outer parameters; compare only compatible fits to the same observations. Inspect gradient, Hessian and boundaries separately.",
+      "zh": "预测误差指标仅使用有限且大于零的调查观测。预测为 `exp(Elog_index)`，即原尺度中位数，未作对数正态均值校正。MASE 使用同一体长组相邻时间步差。AIC/BIC 计数外层自由参数，仅应比较相同观测下相容的拟合。梯度、Hessian 和边界需分别检查。"
+    },
+    "articles": [
+      "diagnostics",
+      "model-comparison"
+    ]
+  },
+  "diagnostic_metrics": {
+    "description": {
+      "en": "Summarize survey fit with prediction errors and information criteria.",
+      "zh": "汇总调查拟合的预测误差和信息准则。"
+    },
+    "value": {
+      "en": "A data frame of metrics. Undefined metrics are `NA`; `diagnose_model()` also includes numerical diagnostics.",
+      "zh": "指标数据框。未定义指标为 `NA`；`diagnose_model()` 另包含数值诊断。"
+    },
+    "details": {
+      "en": "Only finite positive survey observations enter prediction metrics. Predictions are `exp(Elog_index)`, the median on the original scale, without lognormal mean correction. MASE uses within-length one-step differences. AIC/BIC count free outer parameters; compare only compatible fits to the same observations. Inspect gradient, Hessian and boundaries separately.",
+      "zh": "预测误差指标仅使用有限且大于零的调查观测。预测为 `exp(Elog_index)`，即原尺度中位数，未作对数正态均值校正。MASE 使用同一体长组相邻时间步差。AIC/BIC 计数外层自由参数，仅应比较相同观测下相容的拟合。梯度、Hessian 和边界需分别检查。"
+    },
+    "articles": [
+      "diagnostics",
+      "model-comparison"
+    ]
+  },
+  "compare_models": {
+    "description": {
+      "en": "Compare two fitted ACL/ALSCL results numerically.",
+      "zh": "对两个 ACL/ALSCL 拟合结果进行数值比较。"
+    },
+    "value": {
+      "en": "A list: `summary` (optimizer and information criteria), `growth` (growth parameters), `fit_metrics` (survey errors), `correlation` (common time-series correlations and ratios of means), and model labels.",
+      "zh": "列表包含 `summary`（优化和信息准则）、`growth`（生长参数）、`fit_metrics`（调查误差）、`correlation`（共同时间序列的相关系数及均值比）和模型标签。"
+    },
+    "details": {
+      "en": "Model 1 is the reference. `Ratio_Mean` is mean(model2)/mean(model1), not the mean of pointwise ratios. Use identical data and compatible likelihoods for information-criterion comparisons, and assess each fit numerically before ranking models.",
+      "zh": "模型 1 是参照。`Ratio_Mean` 为模型 2 均值除以模型 1 均值，不是逐期比值的平均。信息准则比较应使用相同观测和相容似然，排序前应检查每个拟合的数值状态。"
+    },
+    "articles": [
+      "diagnostics",
+      "model-comparison"
+    ]
+  },
+  "retro_model": {
+    "description": {
+      "en": "Refit after progressively removing terminal observations and summarize retrospective patterns.",
+      "zh": "逐次删除末端观测并重新拟合，汇总回溯模式。"
+    },
+    "value": {
+      "en": "A list with `results`, `rho_text`, `last_points` and `model_type`; `plot=TRUE` also displays the retrospective plot.",
+      "zh": "含 `results`、`rho_text`、`last_points`、`model_type` 的列表；`plot=TRUE` 还会显示回溯图。"
+    },
+    "details": {
+      "en": "`retro_acl()` and `retro_alscl()` choose the model for `retro_model()`. The function fits the full dataset and the peels internally. Supply matching data, fixed assumptions, maps and bounds. Each peel removes one model time step, not necessarily one calendar year. Positive and negative terminal differences can cancel in Mohn’s rho.",
+      "zh": "`retro_acl()`、`retro_alscl()` 为 `retro_model()` 选择模型。函数在内部拟合完整数据及各次删减数据。应提供匹配的数据、固定假设、映射和边界。每次删除一个模型时间步，不一定是一整年。Mohn rho 中正负终点差可能抵消。"
+    },
+    "articles": [
+      "retrospectives",
+      "diagnostics"
+    ]
+  },
+  "retro_acl": {
+    "description": {
+      "en": "Refit after progressively removing terminal observations and summarize retrospective patterns.",
+      "zh": "逐次删除末端观测并重新拟合，汇总回溯模式。"
+    },
+    "value": {
+      "en": "A list with `results`, `rho_text`, `last_points` and `model_type`; `plot=TRUE` also displays the retrospective plot.",
+      "zh": "含 `results`、`rho_text`、`last_points`、`model_type` 的列表；`plot=TRUE` 还会显示回溯图。"
+    },
+    "details": {
+      "en": "`retro_acl()` and `retro_alscl()` choose the model for `retro_model()`. The function fits the full dataset and the peels internally. Supply matching data, fixed assumptions, maps and bounds. Each peel removes one model time step, not necessarily one calendar year. Positive and negative terminal differences can cancel in Mohn’s rho.",
+      "zh": "`retro_acl()`、`retro_alscl()` 为 `retro_model()` 选择模型。函数在内部拟合完整数据及各次删减数据。应提供匹配的数据、固定假设、映射和边界。每次删除一个模型时间步，不一定是一整年。Mohn rho 中正负终点差可能抵消。"
+    },
+    "articles": [
+      "retrospectives",
+      "diagnostics"
+    ]
+  },
+  "retro_alscl": {
+    "description": {
+      "en": "Refit after progressively removing terminal observations and summarize retrospective patterns.",
+      "zh": "逐次删除末端观测并重新拟合，汇总回溯模式。"
+    },
+    "value": {
+      "en": "A list with `results`, `rho_text`, `last_points` and `model_type`; `plot=TRUE` also displays the retrospective plot.",
+      "zh": "含 `results`、`rho_text`、`last_points`、`model_type` 的列表；`plot=TRUE` 还会显示回溯图。"
+    },
+    "details": {
+      "en": "`retro_acl()` and `retro_alscl()` choose the model for `retro_model()`. The function fits the full dataset and the peels internally. Supply matching data, fixed assumptions, maps and bounds. Each peel removes one model time step, not necessarily one calendar year. Positive and negative terminal differences can cancel in Mohn’s rho.",
+      "zh": "`retro_acl()`、`retro_alscl()` 为 `retro_model()` 选择模型。函数在内部拟合完整数据及各次删减数据。应提供匹配的数据、固定假设、映射和边界。每次删除一个模型时间步，不一定是一整年。Mohn rho 中正负终点差可能抵消。"
+    },
+    "articles": [
+      "retrospectives",
+      "diagnostics"
+    ]
+  },
+  "plot_CatL": {
+    "description": {
+      "en": "Compare observed and fitted survey indices across years or length bins.",
+      "zh": "按年份或体长组比较观测与拟合调查指数。"
+    },
+    "value": {
+      "en": "A ggplot object; with `return_data=TRUE`, a list with `plot`, `data1` (fitted) and `data2` (observed).",
+      "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot`、`data1`（拟合）、`data2`（观测）的列表。"
+    },
+    "details": {
+      "en": "`type=\"length\"` facets by length and shows time series; `type=\"year\"` facets by time and shows length profiles. The default is log scale. With `exp_transform=TRUE`, fitted lines show original-scale medians, not a bias-corrected arithmetic mean.",
+      "zh": "`type=\"length\"` 按体长分面展示时间序列；`type=\"year\"` 按时间分面展示体长剖面。默认是对数尺度；`exp_transform=TRUE` 显示原尺度中位数，不是偏差校正后的算术均值。"
+    },
+    "articles": [
+      "population-plots",
+      "plot-customization"
+    ]
+  },
+  "plot_abundance": {
+    "description": {
+      "en": "Plot total or age-/length-specific abundance.",
+      "zh": "绘制总丰度、年龄别或体长别丰度。"
+    },
+    "value": {
+      "en": "A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.",
+      "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
+    },
+    "details": {
+      "en": "Choose `N`, `NA` or `NL`. Abundance is conditional on fixed survey catchability and other model assumptions.",
+      "zh": "选择 `N`、`NA` 或 `NL`。丰度以固定调查可捕性及其他模型假设为条件。"
+    },
+    "articles": [
+      "population-plots",
+      "plot-customization"
+    ]
+  },
+  "plot_biomass": {
+    "description": {
+      "en": "Plot total or age-/length-specific biomass.",
+      "zh": "绘制总生物量、年龄别或体长别生物量。"
+    },
+    "value": {
+      "en": "A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.",
+      "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
+    },
+    "details": {
+      "en": "Choose `B`, `BA` or `BL`. Units depend on input individual weight and the abundance scale.",
+      "zh": "选择 `B`、`BA` 或 `BL`。单位取决于输入个体重量及丰度尺度。"
+    },
+    "articles": [
+      "population-plots",
+      "plot-customization"
+    ]
+  },
+  "plot_SSB": {
+    "description": {
+      "en": "Plot spawning biomass in total or by age/length.",
+      "zh": "绘制总产卵生物量及年龄别/体长别产卵生物量。"
+    },
+    "value": {
+      "en": "A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.",
+      "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
+    },
+    "details": {
+      "en": "Choose `SSB`, `SBA` or `SBL`. Maturity and weight inputs determine the conversion from numbers to spawning biomass.",
+      "zh": "选择 `SSB`、`SBA` 或 `SBL`。成熟比例与个体重量共同决定尾数到产卵生物量的转换。"
+    },
+    "articles": [
+      "population-plots",
+      "plot-customization"
+    ]
+  },
+  "plot_catch": {
+    "description": {
+      "en": "Plot model-derived fishery catch numbers.",
+      "zh": "绘制模型推算的渔业捕获尾数。"
+    },
+    "value": {
+      "en": "A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.",
+      "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
+    },
+    "details": {
+      "en": "Choose `CN`, `CNA` or `CNL`. These are derived fishery removals, distinct from the input survey index.",
+      "zh": "选择 `CN`、`CNA` 或 `CNL`。这些量是推算的渔业移除量，与输入的调查指数不同。"
+    },
+    "articles": [
+      "population-plots",
+      "plot-customization"
+    ]
+  },
+  "plot_recruitment": {
+    "description": {
+      "en": "Plot the estimated recruitment time series.",
+      "zh": "绘制估计补充量的时间序列。"
+    },
+    "value": {
+      "en": "A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.",
+      "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
+    },
+    "details": {
+      "en": "Recruitment enters the youngest modeled age group. Its scale is conditional on catchability assumptions.",
+      "zh": "补充量进入模型的最小年龄组，尺度以可捕性等假设为条件。"
+    },
+    "articles": [
+      "population-plots",
+      "plot-customization"
+    ]
+  },
+  "plot_SSB_Rec": {
+    "description": {
+      "en": "Explore spawning biomass and recruitment from a fitted model.",
+      "zh": "展示拟合结果中的产卵生物量与补充量关系。"
+    },
+    "value": {
+      "en": "A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.",
+      "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
+    },
+    "details": {
+      "en": "This is a descriptive plot of fitted quantities; a smooth curve is not a fitted mechanistic stock–recruitment model or evidence of causation.",
+      "zh": "这是拟合量之间的描述性图。平滑曲线不等于拟合了机制性的亲体—补充模型，也不构成因果证据。"
+    },
+    "articles": [
+      "population-plots",
+      "plot-customization"
+    ]
+  },
+  "plot_VB": {
+    "description": {
+      "en": "Plot estimated von Bertalanffy growth with optional uncertainty.",
+      "zh": "绘制估计的 von Bertalanffy 生长曲线及可选不确定性区间。"
+    },
+    "value": {
+      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
+      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+    },
+    "details": {
+      "en": "Intervals propagate available growth-parameter covariance. Fixed growth parameters can produce a zero-width interval. If usable covariance is unavailable, the function warns and plots the curve without an interval.",
+      "zh": "区间传播可用的生长参数协方差。生长参数固定时区间可退化为线；没有可用协方差时，函数提示并仅绘制曲线。"
+    },
+    "articles": [
+      "growth-mortality",
+      "plot-customization"
+    ]
+  },
+  "plot_pla": {
+    "description": {
+      "en": "Display the probability of length conditional on age.",
+      "zh": "展示给定年龄的体长概率。"
+    },
+    "value": {
+      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
+      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+    },
+    "details": {
+      "en": "The heatmap shows the age–length key `pla`. It is not the one-step growth transition matrix G.",
+      "zh": "热图展示年龄—体长概率矩阵 `pla`，不是一步生长转移矩阵 G。"
+    },
+    "articles": [
+      "growth-mortality",
+      "plot-customization"
+    ]
+  },
+  "plot_fishing_mortality": {
+    "description": {
+      "en": "Plot fishing mortality by time and age or length.",
+      "zh": "按时间、年龄或体长绘制捕捞死亡率。"
+    },
+    "value": {
+      "en": "A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.",
+      "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
+    },
+    "details": {
+      "en": "ACL estimates F by age; its `type=\"length\"` option is a compatibility alias for age curves. ALSCL estimates length-specific F and derives age-specific F from cohort survival. F remains per model time step.",
+      "zh": "ACL 按年龄估计 F，其 `type=\"length\"` 是年龄曲线的兼容别名。ALSCL 按体长估计 F，并从队列存活推导年龄别 F。F 始终以模型时间步为单位。"
+    },
+    "articles": [
+      "growth-mortality",
+      "plot-customization"
+    ]
+  },
+  "plot_residuals": {
+    "description": {
+      "en": "Plot log-scale survey residuals.",
+      "zh": "绘制调查指数的对数尺度残差。"
+    },
+    "value": {
+      "en": "A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.",
+      "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
+    },
+    "details": {
+      "en": "Residuals are observed log index minus fitted `Elog_index`. Missing and excluded observations are not evidence of a perfect fit. Inspect time and length structure as well as overall error size.",
+      "zh": "残差为观测对数指数减去拟合 `Elog_index`。缺失或排除的观测不意味着完美拟合；除误差大小外还应检查时间与体长结构。"
+    },
+    "articles": [
+      "growth-mortality",
+      "plot-customization"
+    ]
+  },
+  "plot_deviance": {
+    "description": {
+      "en": "Plot recruitment or fishing-mortality process deviations.",
+      "zh": "绘制补充或捕捞死亡率的过程偏差。"
+    },
+    "value": {
+      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
+      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+    },
+    "details": {
+      "en": "Select recruitment (`R`) or fishing mortality (`F`) and inspect whether the chosen display exponentiates log deviations. This function plots process deviations, not an overall likelihood-deviance statistic.",
+      "zh": "选择补充（`R`）或捕捞死亡率（`F`），并确认显示是否将对数偏差指数化。本函数绘制过程偏差，不是整体似然偏差统计量。"
+    },
+    "articles": [
+      "growth-mortality",
+      "plot-customization"
+    ]
+  },
+  "plot_ridges": {
+    "description": {
+      "en": "Plot length-composition ridges ordered through time.",
+      "zh": "按时间顺序绘制体长组成山脊图。"
+    },
+    "value": {
+      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
+      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+    },
+    "details": {
+      "en": "Requires a live TMB `obj`; refit in a new R session instead of relying on an old saved external pointer. The default viridis progression encodes time.",
+      "zh": "需要当前会话中活跃的 TMB `obj`；新会话应重新拟合，不能依赖旧结果中的外部指针。默认 viridis 渐变表示时间顺序。"
+    },
+    "articles": [
+      "growth-mortality",
+      "plot-customization"
+    ]
+  },
+  "plot_retro": {
+    "description": {
+      "en": "Plot retrospective trajectories and Mohn’s rho.",
+      "zh": "绘制回溯轨迹与 Mohn rho。"
+    },
+    "value": {
+      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
+      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+    },
+    "details": {
+      "en": "Use the output of `retro_model()`, `retro_acl()` or `retro_alscl()`. Compare each terminal point with the full fit at that same time; inspect trajectories, not only the average rho.",
+      "zh": "输入 `retro_model()`、`retro_acl()` 或 `retro_alscl()` 的结果。将每个终点与全长拟合同期比较；除了平均 rho，还应检查各条轨迹。"
+    },
+    "articles": [
+      "retrospectives",
+      "plot-customization"
+    ]
+  },
+  "plot_compare_ts": {
+    "description": {
+      "en": "Compare population time series from two fitted models.",
+      "zh": "比较两个拟合模型的种群时间序列。"
+    },
+    "value": {
+      "en": "A ggplot object; with `return_data=TRUE`, a list with `plot` and the processed `data`.",
+      "zh": "ggplot 对象；`return_data=TRUE` 时返回含 `plot` 和整理后的 `data` 的列表。"
+    },
+    "details": {
+      "en": "Use compatible observations, units and time steps. Optional intervals are conditional on each model’s fixed assumptions.",
+      "zh": "应使用相容的观测、单位和时间步长。可选区间以各模型的固定假设为条件。"
+    },
+    "articles": [
+      "model-comparison",
+      "plot-customization"
+    ]
+  },
+  "plot_compare_CatL": {
+    "description": {
+      "en": "Compare survey fits from two models.",
+      "zh": "比较两个模型对调查指数的拟合。"
+    },
+    "value": {
+      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
+      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+    },
+    "details": {
+      "en": "Compares the same survey observations with exp(Elog_index) from both models, on the original scale. These predictions are medians, without lognormal mean correction.",
+      "zh": "在原始尺度比较同一调查观测与两个模型的 exp(Elog_index)。这些预测是中位数，没有作对数正态均值校正。"
+    },
+    "articles": [
+      "model-comparison",
+      "plot-customization"
+    ]
+  },
+  "plot_compare_F": {
+    "description": {
+      "en": "Compare the age- or length-structured fishing mortality matrices.",
+      "zh": "比较年龄或体长结构的捕捞死亡率矩阵。"
+    },
+    "value": {
+      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
+      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+    },
+    "details": {
+      "en": "ACL and ALSCL estimate F on different structural axes. A visual comparison should state the axis and time-step units.",
+      "zh": "ACL 和 ALSCL 在不同结构维度估计 F，比较时应说明年龄/体长维度及时间步单位。"
+    },
+    "articles": [
+      "model-comparison",
+      "plot-customization"
+    ]
+  },
+  "plot_compare_annual_F": {
+    "description": {
+      "en": "Compare summary fishing-mortality time series.",
+      "zh": "比较汇总捕捞死亡率时间序列。"
+    },
+    "value": {
+      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
+      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+    },
+    "details": {
+      "en": "`apical` and `mean` summarize groups differently. Despite the function name, quarterly per-step rates are not automatically annualized.",
+      "zh": "`apical` 与 `mean` 的分组汇总方式不同。尽管函数名含 annual，季度每步死亡率不会自动年化。"
+    },
+    "articles": [
+      "model-comparison",
+      "plot-customization"
+    ]
+  },
+  "plot_compare_growth": {
+    "description": {
+      "en": "Compare growth curves and optional external age–length references.",
+      "zh": "比较生长曲线及可选的外部年龄—体长参照。"
+    },
+    "value": {
+      "en": "A plot composition that can be displayed or saved with `ggplot2::ggsave()`.",
+      "zh": "可直接显示或用 `ggplot2::ggsave()` 保存的组合图对象。"
+    },
+    "details": {
+      "en": "External data or supplied reference parameters must have matching age and length units. Simulated truth is an illustration, not independent validation.",
+      "zh": "外部数据或所给参照参数必须使用匹配的年龄和体长单位。模拟真值用于说明，不是独立验证。"
+    },
+    "articles": [
+      "model-comparison",
+      "plot-customization"
+    ]
+  },
+  "plot_compare_selectivity": {
+    "description": {
+      "en": "Compare fixed survey catchability curves.",
+      "zh": "比较固定的调查可捕性曲线。"
+    },
+    "value": {
+      "en": "A ggplot object, suitable for further styling or `ggplot2::ggsave()`.",
+      "zh": "ggplot 对象，可继续调整样式或用 `ggplot2::ggsave()` 保存。"
+    },
+    "details": {
+      "en": "The historical function name says selectivity, but the plotted q curves come from supplied survey catchability settings. They are not estimated fishery selectivity.",
+      "zh": "函数历史名称含 selectivity，但 q 曲线来自所给的固定调查可捕性设置，并非估计得到的渔业选择性。"
+    },
+    "articles": [
+      "model-comparison",
+      "plot-customization"
+    ]
+  },
+  "plot_compare_residuals": {
+    "description": {
+      "en": "Compare residual distributions and structure between models.",
+      "zh": "比较模型间的残差分布与结构。"
+    },
+    "value": {
+      "en": "A plot composition that can be displayed or saved with `ggplot2::ggsave()`.",
+      "zh": "可直接显示或用 `ggplot2::ggsave()` 保存的组合图对象。"
+    },
+    "details": {
+      "en": "Use the same observation cells and inspect both distributions and systematic patterns. Residual similarity does not establish identical population estimates.",
+      "zh": "应使用相同观测单元，并同时检查分布和系统性模式。残差相近不代表种群估计相同。"
+    },
+    "articles": [
+      "model-comparison",
+      "plot-customization"
+    ]
+  },
+  "plot_compare_metrics": {
+    "description": {
+      "en": "Display selected fit and information-criterion comparisons.",
+      "zh": "展示所选拟合指标与信息准则的比较。"
+    },
+    "value": {
+      "en": "A plot composition that can be displayed or saved with `ggplot2::ggsave()`.",
+      "zh": "可直接显示或用 `ggplot2::ggsave()` 保存的组合图对象。"
+    },
+    "details": {
+      "en": "Different panels use different units and optimization directions. Numerical convergence and likelihood comparability must be checked before interpreting ranks.",
+      "zh": "不同面板的单位及优劣方向不同。解读排名前须检查数值收敛和似然可比性。"
+    },
+    "articles": [
+      "model-comparison",
+      "plot-customization"
+    ]
+  },
+  "acl_theme": {
+    "description": {
+      "en": "Read the active global ALSCL plotting settings.",
+      "zh": "读取当前全局 ALSCL 绘图设置。"
+    },
+    "value": {
+      "en": "The complete settings list when `what=NULL`, or the requested setting otherwise.",
+      "zh": "`what=NULL` 时返回完整设置列表，否则返回指定设置项。"
+    },
+    "details": {
+      "en": "Function-level arguments override inherited settings where supported. Use `acl_theme_set()` to change defaults and `acl_theme_reset()` to restore package defaults.",
+      "zh": "支持的函数级参数可覆盖继承的全局设置。使用 `acl_theme_set()` 修改默认值，使用 `acl_theme_reset()` 恢复包默认值。"
+    },
+    "articles": [
+      "plot-customization"
+    ]
+  },
+  "acl_theme_set": {
+    "description": {
+      "en": "Set global plot colors, typography, labels and layout defaults.",
+      "zh": "设置全局绘图颜色、字体、标签和布局默认值。"
+    },
+    "value": {
+      "en": "The previous `acl.theme` option, returned invisibly. The active global option is updated.",
+      "zh": "不可见地返回原 `acl.theme` 选项，并更新当前全局选项。"
+    },
+    "details": {
+      "en": "Choose supported ggsci palettes or explicit role colors. NULL generally leaves an existing setting unchanged. Changes apply to subsequently constructed plots, not already-created plot objects.",
+      "zh": "可选择支持的 ggsci 色板或直接指定各角色颜色。NULL 通常保留现有设置。修改对之后构造的图生效，不会改动已经生成的图对象。"
+    },
+    "articles": [
+      "plot-customization"
+    ]
+  },
+  "acl_theme_reset": {
+    "description": {
+      "en": "Restore the package’s default global plotting settings.",
+      "zh": "恢复包的默认全局绘图设置。"
+    },
+    "value": {
+      "en": "Invisibly returns NULL after resetting the option and printing a confirmation.",
+      "zh": "重置选项并打印提示后，不可见地返回 NULL。"
+    },
+    "details": {
+      "en": "This changes global plot settings for future plots in the current R session. It does not refit models or alter their estimates.",
+      "zh": "重置当前 R 会话中后续绘图使用的全局设置，不会重新拟合模型或更改估计值。"
+    },
+    "articles": [
+      "plot-customization"
+    ]
+  }
+}
