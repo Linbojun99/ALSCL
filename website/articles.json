@@ -5,7 +5,11 @@
       "en": "Getting started",
       "zh": "开始使用"
     },
-    "source": "docs/wiki/01-Start.md"
+    "source": "docs/wiki/01-Start.md",
+    "description": {
+      "en": "Install the package and a compatible C++ compiler, check dependencies, and prepare an R session for TMB model fitting.",
+      "zh": "安装软件包与兼容的 C++ 编译器，检查依赖，并准备 TMB 模型拟合环境。"
+    }
   },
   {
     "slug": "model-theory",
@@ -13,7 +17,11 @@
       "en": "Model principles",
       "zh": "模型原理与时间尺度"
     },
-    "source": "docs/wiki/02-Theory.md"
+    "source": "docs/wiki/02-Theory.md",
+    "description": {
+      "en": "Learn how ACL and ALSCL represent population dynamics, growth, recruitment, fishing mortality and observation error, including the units of each time step.",
+      "zh": "理解 ACL 与 ALSCL 的种群动态、生长、补充、捕捞死亡率与观测误差，以及各时间步的单位。"
+    }
   },
   {
     "slug": "data-preparation",
@@ -21,7 +29,11 @@
       "en": "Data and observations",
       "zh": "数据、Excel 与实测导入"
     },
-    "source": "docs/wiki/03-Data-and-Excel.md"
+    "source": "docs/wiki/03-Data-and-Excel.md",
+    "description": {
+      "en": "Align the survey-number, mean-weight and maturity tables by length bin and time. Import Excel or CSV files and distinguish missing observations from genuine zeros.",
+      "zh": "按体长组和时间对齐调查数量、平均个体重量与成熟比例三张表。导入 Excel 或 CSV，并区分缺失观测与真实零值。"
+    }
   },
   {
     "slug": "first-model",
@@ -29,7 +41,11 @@
       "en": "Built-in YTF",
       "zh": "内置数据与首个拟合"
     },
-    "source": "docs/wiki/04-Built-in-YTF.md"
+    "source": "docs/wiki/04-Built-in-YTF.md",
+    "description": {
+      "en": "Fit run_acl() and run_alscl() to the bundled synthetic YTF example and learn the fitted objects, settings and data provenance.",
+      "zh": "对内置模拟 YTF 示例运行 run_acl() 与 run_alscl()，了解拟合对象、参数设置与数据来源。"
+    }
   },
   {
     "slug": "simulation",
@@ -37,7 +53,11 @@
       "en": "Simulation",
       "zh": "模拟与批量实验"
     },
-    "source": "docs/wiki/05-Simulation.md"
+    "source": "docs/wiki/05-Simulation.md",
+    "description": {
+      "en": "Choose between simulate_example_data() for simple annual tables and initialize_params(), sim_cal() and sim_data() for full operating-model simulations.",
+      "zh": "选择 simulate_example_data() 生成简化年度表，或用 initialize_params()、sim_cal() 与 sim_data() 运行完整操作模型模拟。"
+    }
   },
   {
     "slug": "fitting-controls",
@@ -45,7 +65,11 @@
       "en": "Fitting controls",
       "zh": "初值、边界与拟合"
     },
-    "source": "docs/wiki/06-Fitting.md"
+    "source": "docs/wiki/06-Fitting.md",
+    "description": {
+      "en": "Set starting values, bounds, fixed parameters, time steps and repeated optimization starts for run_acl() and run_alscl().",
+      "zh": "为 run_acl() 与 run_alscl() 设置初值、边界、固定参数、时间步和重复优化起点。"
+    }
   },
   {
     "slug": "diagnostics",
@@ -53,7 +77,11 @@
       "en": "Diagnostics",
       "zh": "诊断与结果解读"
     },
-    "source": "docs/wiki/07-Diagnostics.md"
+    "source": "docs/wiki/07-Diagnostics.md",
+    "description": {
+      "en": "Use diagnose_model() and diagnostic_metrics() to inspect optimization, gradients, the Hessian, boundaries and residual patterns before interpreting estimates.",
+      "zh": "使用 diagnose_model() 与 diagnostic_metrics() 检查优化、梯度、Hessian、参数边界和残差，再解释估计结果。"
+    }
   },
   {
     "slug": "population-plots",
@@ -61,7 +89,11 @@
       "en": "Survey and population plots",
       "zh": "调查与种群图"
     },
-    "source": "docs/wiki/08-Population-Plots.md"
+    "source": "docs/wiki/08-Population-Plots.md",
+    "description": {
+      "en": "Plot survey numbers, abundance, biomass, spawning biomass, recruitment and catch with the population plotting functions.",
+      "zh": "使用种群绘图函数展示调查数量、丰度、生物量、产卵生物量、补充量与捕获量。"
+    }
   },
   {
     "slug": "growth-mortality",
@@ -69,7 +101,11 @@
       "en": "Growth, mortality and residuals",
       "zh": "生长、死亡与残差图"
     },
-    "source": "docs/wiki/09-Growth-and-Mortality.md"
+    "source": "docs/wiki/09-Growth-and-Mortality.md",
+    "description": {
+      "en": "Inspect growth curves, age–length probabilities, fishing mortality and residual structure using plot_VB(), plot_pla(), plot_fishing_mortality() and related plots.",
+      "zh": "用 plot_VB()、plot_pla()、plot_fishing_mortality() 等函数检查生长曲线、年龄—体长概率、捕捞死亡率与残差结构。"
+    }
   },
   {
     "slug": "model-comparison",
@@ -77,7 +113,11 @@
       "en": "Model comparisons",
       "zh": "模型比较与真值"
     },
-    "source": "docs/wiki/10-Model-Comparisons.md"
+    "source": "docs/wiki/10-Model-Comparisons.md",
+    "description": {
+      "en": "Use compare_models() and the plot_compare_*() functions to compare fitted quantities, observation fits and diagnostics on a common data window.",
+      "zh": "使用 compare_models() 与 plot_compare_*() 系列函数，在相同数据时间窗内比较估计指标、观测拟合与诊断。"
+    }
   },
   {
     "slug": "retrospectives",
@@ -85,15 +125,23 @@
       "en": "Retrospectives",
       "zh": "回溯分析"
     },
-    "source": "docs/wiki/11-Retrospectives.md"
+    "source": "docs/wiki/11-Retrospectives.md",
+    "description": {
+      "en": "Refit shortened series with retro_acl() or retro_alscl(), then visualize revisions with plot_retro() and interpret Mohn’s rho.",
+      "zh": "用 retro_acl() 或 retro_alscl() 拟合截短序列，以 plot_retro() 展示估计修订，并解释 Mohn rho。"
+    }
   },
   {
     "slug": "case-studies",
     "title": {
-      "en": "Annual and quarterly cases",
-      "zh": "年度与季度案例"
+      "en": "Annual and quarterly time steps",
+      "zh": "年度与季度时间步"
     },
-    "source": "docs/wiki/12-Case-Studies.md"
+    "source": "docs/wiki/12-Case-Studies.md",
+    "description": {
+      "en": "Understand how annual flatfish and quarterly tuna presets differ in time steps, biology and operating-model structure. Both examples are simulated.",
+      "zh": "理解年度鲽鱼与季度金枪鱼预设在时间步、生物参数和操作模型结构上的差异。两组示例均为模拟数据。"
+    }
   },
   {
     "slug": "plot-customization",
@@ -101,7 +149,11 @@
       "en": "Colors and export",
       "zh": "ggsci 配色与导出"
     },
-    "source": "docs/wiki/13-Colors-and-Export.md"
+    "source": "docs/wiki/13-Colors-and-Export.md",
+    "description": {
+      "en": "Apply shared colors and themes with acl_theme_set(), refine ggplot objects, and export figures at an explicit size and resolution.",
+      "zh": "用 acl_theme_set() 设置统一配色与主题，调整 ggplot 图形，并按指定尺寸和分辨率导出。"
+    }
   },
   {
     "slug": "reproducibility",
@@ -109,7 +161,11 @@
       "en": "Reproducibility",
       "zh": "进阶、复现与故障处理"
     },
-    "source": "docs/wiki/15-Reproducibility.md"
+    "source": "docs/wiki/15-Reproducibility.md",
+    "description": {
+      "en": "Record assumptions, software versions and fit diagnostics; manage compilation caches and distinguish saved summaries from live TMB objects.",
+      "zh": "记录假设、软件版本与拟合诊断；管理编译缓存，并区分保存的汇总结果与当前会话中的 TMB 对象。"
+    }
   },
   {
     "slug": "estimation-parameters",
@@ -117,6 +173,10 @@
       "en": "Estimation parameter lists",
       "zh": "估计参数列表"
     },
-    "source": "docs/FUNCTION_REFERENCE.md"
+    "source": "docs/FUNCTION_REFERENCE.md",
+    "description": {
+      "en": "Review all scalar estimation keys, their optimizer-scale transformations, initial values and lower and upper bounds.",
+      "zh": "查阅全部标量估计参数、优化尺度变换、初值以及上下界。"
+    }
   }
 ]

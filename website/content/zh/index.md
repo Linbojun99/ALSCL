@@ -2,15 +2,15 @@
 
 **ALSCL** 是基于 [Template Model Builder（TMB）](https://github.com/kaskr/adcomp) 的 R 包，利用独立于渔业的调查体长数据拟合种群模型。包内提供年龄结构模型 **ACL** 和年龄—体长联合结构模型 **ALSCL**，以及模拟、诊断、模型比较和绘图工具。
 
-可以从 [完整拟合示例](articles/first-model.html) 开始，阅读 [使用指南](articles/index.html)，或通过 [函数参考](reference/index.html) 查找具体用法。模型框架基于 [Zhang & Cadigan（2022）](https://doi.org/10.1111/faf.12673)。
+可以从 [完整拟合示例](articles/first-model.html) 开始，从 [首页目录](#contents) 查阅基本功能，阅读 [专题案例](articles/index.html)，或通过 [函数参考](reference/index.html) 查找具体用法。模型框架基于 [Zhang & Cadigan（2022）](https://doi.org/10.1111/faf.12673)。
 
-## 目录
+<h2 id="contents">目录</h2>
 
 - [安装](#installation)
 - [两种模型结构](#models)
 - [基本使用](#basic-use)
 - [检查与解释拟合](#check-fit)
-- [进一步学习](#learn-more)
+<!-- ARTICLE_CONTENTS -->
 - [获取帮助](#help)
 - [引用](#citation)
 
@@ -70,14 +70,9 @@ comparison$summary
 
 分别检查优化状态、最大绝对梯度、Hessian 及参数是否触及边界，再检查残差结构和对固定假设的敏感性。优化器显示成功，不能单独证明推断可靠。详见 [诊断](articles/diagnostics.html) 与 [模型比较](articles/model-comparison.html)。
 
-<h2 id="learn-more">进一步学习</h2>
+<h2 id="learn-more">基本功能</h2>
 
-- [准备自己的调查数据](articles/data-preparation.html)：三表布局、体长组、缺失值及 Excel/CSV 导入。
-- [控制模型拟合](articles/fitting-controls.html)：初值、边界、固定参数、时间步与多起点。
-- [开展模拟实验](articles/simulation.html)：操作模型、已知真值与批量实验。
-- 查看 [种群绘图](articles/population-plots.html) 及 [生长、死亡率与残差](articles/growth-mortality.html)。
-- [开展回溯分析](articles/retrospectives.html) 并解释 Mohn rho。
-- [调整配色与导出图片](articles/plot-customization.html)。
+<!-- ARTICLE_GUIDE -->
 
 <h2 id="help">获取帮助</h2>
 

@@ -2,15 +2,15 @@
 
 **ALSCL** is an R package for fitting population models to fishery-independent survey length data using [Template Model Builder (TMB)](https://github.com/kaskr/adcomp). It provides an age-structured model (**ACL**) and a joint age–length model (**ALSCL**), together with simulation, diagnostics, model comparison and plotting tools.
 
-Start with a [worked example](articles/first-model.html), explore the [user guide](articles/index.html), or look up a function in the [reference](reference/index.html). The model framework is based on [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673).
+Start with a [worked example](articles/first-model.html), browse the [basic functions](#contents) and [worked case studies](articles/index.html), or look up a function in the [reference](reference/index.html). The model framework is based on [Zhang & Cadigan (2022)](https://doi.org/10.1111/faf.12673).
 
-## Contents
+<h2 id="contents">Contents</h2>
 
 - [Installation](#installation)
 - [Two model structures](#models)
 - [Basic use](#basic-use)
 - [Check and interpret the fit](#check-fit)
-- [Learn more](#learn-more)
+<!-- ARTICLE_CONTENTS -->
 - [Getting help](#help)
 - [Citation](#citation)
 
@@ -70,14 +70,9 @@ comparison$summary
 
 Check the optimizer status, maximum absolute gradient, Hessian and parameter boundaries separately. Then inspect residual patterns and sensitivity to fixed assumptions. A successful optimizer message alone does not establish reliable inference. See [diagnostics](articles/diagnostics.html) and [model comparison](articles/model-comparison.html).
 
-<h2 id="learn-more">Learn more</h2>
+<h2 id="learn-more">Basic functions</h2>
 
-- [Prepare your own survey data](articles/data-preparation.html): table layout, length bins, missing values, Excel and CSV import.
-- [Control the fit](articles/fitting-controls.html): initial values, bounds, fixed parameters, time steps and multiple starts.
-- [Explore simulation scenarios](articles/simulation.html): operating models, known truth and batch experiments.
-- [Inspect population plots](articles/population-plots.html) and [growth, mortality and residuals](articles/growth-mortality.html).
-- [Run retrospective analyses](articles/retrospectives.html) and interpret Mohn’s rho.
-- [Customize colors and export figures](articles/plot-customization.html).
+<!-- ARTICLE_GUIDE -->
 
 <h2 id="help">Getting help</h2>
 

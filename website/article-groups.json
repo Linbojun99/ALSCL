@@ -1,0 +1,95 @@
+[
+  {
+    "id": "getting-started",
+    "title": {
+      "en": "Getting started and data",
+      "zh": "入门与数据准备"
+    },
+    "description": {
+      "en": "Install ALSCL, prepare the survey tables, and fit the worked YTF example.",
+      "zh": "安装 ALSCL、准备调查输入表，并完成 YTF 示例拟合。"
+    },
+    "articles": [
+      "getting-started",
+      "data-preparation",
+      "first-model"
+    ]
+  },
+  {
+    "id": "model-fitting",
+    "title": {
+      "en": "Model structure and fitting",
+      "zh": "模型结构与拟合"
+    },
+    "description": {
+      "en": "Understand the model assumptions and time scales, then choose initial values, bounds and estimated parameters.",
+      "zh": "理解模型假设与时间尺度，设置初值、边界和待估参数。"
+    },
+    "articles": [
+      "model-theory",
+      "fitting-controls",
+      "estimation-parameters"
+    ]
+  },
+  {
+    "id": "simulation",
+    "title": {
+      "en": "Simulation and time steps",
+      "zh": "模拟与时间步"
+    },
+    "description": {
+      "en": "Generate data with known truth and explore annual and quarterly assessment workflows.",
+      "zh": "生成具有已知真值的模拟数据，了解年度与季度评估流程。"
+    },
+    "articles": [
+      "simulation",
+      "case-studies"
+    ]
+  },
+  {
+    "id": "diagnostics",
+    "title": {
+      "en": "Diagnostics and model comparison",
+      "zh": "诊断与模型比较"
+    },
+    "description": {
+      "en": "Check fits and residuals, compare model results, and assess retrospective patterns.",
+      "zh": "检查拟合与残差、比较模型结果，并评估回溯分析中的变化。"
+    },
+    "articles": [
+      "diagnostics",
+      "model-comparison",
+      "retrospectives"
+    ]
+  },
+  {
+    "id": "visualization",
+    "title": {
+      "en": "Plots and figure export",
+      "zh": "绘图与图片导出"
+    },
+    "description": {
+      "en": "Visualize survey data, population quantities, growth, mortality and residuals; customize and export figures.",
+      "zh": "绘制调查数据、种群指标、生长、死亡率与残差图，调整样式并导出图片。"
+    },
+    "articles": [
+      "population-plots",
+      "growth-mortality",
+      "plot-customization"
+    ]
+  },
+  {
+    "id": "reproducibility",
+    "title": {
+      "en": "Reproducibility and troubleshooting",
+      "zh": "复现与故障处理"
+    },
+    "description": {
+      "en": "Save analysis settings, record the computing environment, and resolve common data and compilation issues.",
+      "zh": "保存分析设置、记录计算环境，并排查常见数据与编译问题。"
+    },
+    "articles": [
+      "reproducibility"
+    ]
+  }
+]

@@ -21,6 +21,9 @@ REPO = 'https://github.com/Linbojun99/ALSCL'
 BASE = 'https://linbojun99.github.io/ALSCL/'
 VERSION = re.search(r'^Version: (.+)$', (ROOT / 'DESCRIPTION').read_text(), re.M)[1]
 ARTICLES = json.loads((WEB / 'articles.json').read_text())
+ARTICLE_GROUPS = json.loads((WEB / 'article-groups.json').read_text())
+ARTICLES_BY_SLUG = {article['slug']: article for article in ARTICLES}
+CASES = json.loads((WEB / 'cases.json').read_text())
 UI = {
     'en': dict(reference='Reference', articles='Articles', start='Get started', news='Changelog',
                search='Search documentation', contents='On this page', source='View source',
@@ -29,7 +32,7 @@ UI = {
                required='required', home='Home', copy='Copy', copied='Copied', previous='Previous', next='Next',
                skip='Skip to contents', menu='Menu', noresults='No results. Try a function name or topic.',
                close='Close', functions='Function reference', setup='Example setup'),
-    'zh': dict(reference='函数参考', articles='使用指南', start='开始使用', news='更新日志',
+    'zh': dict(reference='函数参考', articles='专题案例', start='开始使用', news='更新日志',
                search='搜索文档', contents='本页目录', source='查看源代码',
                usage='用法', arguments='参数', returns='返回值', details='使用说明', examples='示例',
                related='相关内容', argument='参数', default='默认值', description='说明',
@@ -88,6 +91,24 @@ def lang_route(lang, route):
 def link(route, target, text, **attrs):
     extra = ''.join(f' {k.replace("_", "-")}="{html.escape(v, quote=True)}"' for k, v in attrs.items())
     return f'<a href="{html.escape(rel(route, target), quote=True)}"{extra}>{text}</a>'
+
+def article_sections(lang, home=False):
+    sections = []
+    for group in ARTICLE_GROUPS:
+        tag = 'h2'
+        anchor = 'guide-' + group['id'] if home else group['id']
+        items = ''
+        for slug in group['articles']:
+            article = ARTICLES_BY_SLUG[slug]
+            detail = 'Full guide and examples' if lang=='en' else '详细说明与示例'
+            items += f'<h3 id="basic-{slug}">{html.escape(article["title"][lang])}</h3><p>{html.escape(article["description"][lang])}</p>'
+            items += '<p><a href="' + ('articles/' if home else '') + slug + '.html">' + detail + ' →</a></p>'
+        sections.append(f'<section class="article-group"><{tag} id="{anchor}">{html.escape(group["title"][lang])}</{tag}>'
+                        f'<p>{html.escape(group["description"][lang])}</p>{items}</section>')
+    return '\n'.join(sections)
+
+def case_groups():
+    return list(dict.fromkeys(case['group'] for case in CASES))
 
 def rewrite_links(soup, route, lang):
     by_wiki = {Path(a['source']).stem: a['slug'] for a in ARTICLES}
@@ -153,9 +174,20 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
         button.string = ui['copy']
         pre.insert_before(button)
     plain = soup.get_text(' ', strip=True)
-    SEARCH[lang].append({'title':title, 'url':route_base, 'type':ui['reference'] if kind=='reference' else ui['articles'], 'text':plain})
+    SEARCH[lang].append({'title':title, 'url':route_base, 'type':ui['reference'] if kind=='reference' else (ui['articles'] if kind=='case' else ('Basic functions' if lang=='en' else '基本功能')), 'text':plain})
     nav = ''.join(link(route, lang_route(lang, p), ui[k], **({'aria_current':'page'} if route_base==p else {})) for k,p in
-                  [('start','articles/getting-started.html'),('reference','reference/index.html'),('articles','articles/index.html'),('news','news/index.html')])
+                  [('start','articles/getting-started.html'),('reference','reference/index.html')])
+    category_links = ''
+    for group in case_groups():
+        cases = [case for case in CASES if case['group']==group]
+        category_links += '<li class="dropdown-heading">' + html.escape(cases[0]['group_title'][lang]) + '</li>'
+        category_links += ''.join('<li>' + link(route, lang_route(lang, 'articles/' + case['slug'] + '.html'),
+                                              html.escape(case['title'][lang])) + '</li>' for case in cases)
+    all_articles = link(route, lang_route(lang, 'articles/index.html'), 'All case studies' if lang=='en' else '全部专题案例')
+    active = ' is-active' if kind=='case' else ''
+    nav += (f'<details class="articles-dropdown{active}"><summary>{ui["articles"]}<span class="caret" aria-hidden="true"></span></summary>'
+            f'<div class="articles-menu"><ul>{category_links}</ul><div class="all-articles">{all_articles}</div></div></details>')
+    nav += link(route, lang_route(lang, 'news/index.html'), ui['news'], **({'aria_current':'page'} if route_base=='news/index.html' else {}))
     other = 'zh' if lang=='en' else 'en'
     switch = link(route, lang_route(other, route_base), '简体中文' if lang=='en' else 'English', id='language-switch', hreflang='zh-Hans' if other=='zh' else 'en', lang='zh-Hans' if other=='zh' else 'en')
     sidebar = '<nav class="toc" aria-label="'+ui['contents']+'"><h2>'+ui['contents']+'</h2><ul>'+''.join(toc)+'</ul></nav>'
@@ -174,7 +206,8 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
     description = description or plain[:180]
     canonical = BASE + route
     logo = f'<img class="package-logo" src="{rel(route,"assets/ALSCLlogo.png")}" alt="ALSCL" width="140" height="140">' if kind=='home' else ''
-    breadcrumb = '' if kind=='home' else f'<div class="breadcrumb">{link(route,lang_route(lang,"index.html"),ui["home"])} <span>/</span> {ui["reference"] if kind=="reference" else ui["articles"]}</div>'
+    section_label = ui['reference'] if kind=='reference' else (ui['articles'] if kind=='case' else ('Basic functions' if lang=='en' else '基本功能'))
+    breadcrumb = '' if kind=='home' else f'<div class="breadcrumb">{link(route,lang_route(lang,"index.html"),ui["home"])} <span>/</span> {section_label}</div>'
     document = f'''<!doctype html>
 <html lang="{'en' if lang=='en' else 'zh-Hans'}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(title)} • ALSCL</title>
@@ -295,6 +328,8 @@ def build(out):
     if set(supplements)!=set(FUNCTIONS): raise ValueError('Each public function must have bilingual editorial notes.')
     grouped=[n for group in GROUPS for n in group[3]]
     assert len(grouped)==len(set(grouped)) and set(grouped)==set(FUNCTIONS)
+    article_slugs = [slug for group in ARTICLE_GROUPS for slug in group['articles']]
+    assert len(article_slugs)==len(set(article_slugs)) and set(article_slugs)==set(ARTICLES_BY_SLUG), 'Every article must belong to exactly one category.'
     out.mkdir(parents=True,exist_ok=True)
     prepare_katex(WEB/'assets/katex')
     shutil.copytree(WEB/'assets',out/'assets',dirs_exist_ok=True)
@@ -304,7 +339,13 @@ def build(out):
     (out/'assets/syntax.css').write_text(HtmlFormatter(style='friendly').get_style_defs('.highlight'))
     for lang in ['en','zh']:
         home=(WEB/'content'/lang/'index.md').read_text()
-        render_page(out,'index.html',lang,'ALSCL',md(home),'DESCRIPTION','home')
+        category_contents = ''
+        for group in ARTICLE_GROUPS:
+            category_contents += '- [' + group['title'][lang] + '](#guide-' + group['id'] + ')\n'
+            category_contents += ''.join('    - [' + ARTICLES_BY_SLUG[slug]['title'][lang] + '](#basic-' + slug + ')\n' for slug in group['articles'])
+        home = home.replace('<!-- ARTICLE_CONTENTS -->', category_contents)
+        home_body = md(home).replace('<!-- ARTICLE_GUIDE -->', article_sections(lang, home=True))
+        render_page(out,'index.html',lang,'ALSCL',home_body,'DESCRIPTION','home')
         for i,article in enumerate(ARTICLES):
             text=(WEB/'content'/lang/'articles'/(article['slug']+'.md')).read_text()
             text=re.sub(r'^# [^\n]+\n','',text)
@@ -315,9 +356,17 @@ def build(out):
             if following: body+=f'<a href="{following["slug"]}.html">{following["title"][lang]} →</a>'
             body+='</nav>'
             render_page(out,'articles/'+article['slug']+'.html',lang,article['title'][lang],body,article['source'])
-        items=''.join(f'<li><span class="chapter-number">{i+1:02d}</span><a href="{a["slug"]}.html">{a["title"][lang]}</a></li>' for i,a in enumerate(ARTICLES))
-        render_page(out,'articles/index.html',lang,UI[lang]['articles'],
-            md('A practical path from survey data to model interpretation. Start with installation and the worked YTF example, then explore assumptions, diagnostics and plots.' if lang=='en' else '从调查数据准备到模型解释的完整路径。先完成安装和 YTF 示例，再学习模型假设、诊断与绘图。')+'<ol class="article-index">'+items+'</ol>')
+        case_index = md('Worked cases organized around a concrete question, with inputs, steps and interpretation. For individual tools and basic usage, start with the [homepage Contents](../index.html#contents).' if lang=='en' else '围绕具体问题组织的案例，逐步说明输入、操作与结果解释。各项工具与基本使用方法见 [首页目录](../index.html#contents)。')
+        for group in case_groups():
+            cases = [case for case in CASES if case['group']==group]
+            case_index += f'<h2 id="{group}">{html.escape(cases[0]["group_title"][lang])}</h2>'
+            for case in cases:
+                case_index += f'<h3><a href="{case["slug"]}.html">{html.escape(case["title"][lang])}</a></h3><p>{html.escape(case["description"][lang])}</p>'
+                text = (WEB/'content'/lang/'articles'/(case['slug']+'.md')).read_text()
+                body = md(re.sub(r'^# [^\n]+\n','',text))
+                render_page(out,'articles/'+case['slug']+'.html',lang,case['title'][lang],body,
+                            'website/content/'+lang+'/articles/'+case['slug']+'.md','case')
+        render_page(out,'articles/index.html',lang,UI[lang]['articles'],case_index,kind='case')
         reference_index=md('All 43 exported functions, grouped by task. Signatures and defaults are read directly from the R source when this website is built.' if lang=='en' else '按任务分类的全部 43 个公开函数。函数签名和默认值在建站时直接从 R 源代码读取。')
         for key,en,zh,names in GROUPS:
             reference_index+=f'<h2 id="{key}">{en if lang=="en" else zh}</h2><table class="reference-index"><tbody>'

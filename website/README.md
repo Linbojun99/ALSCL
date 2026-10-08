@@ -21,6 +21,8 @@ Use the equivalent virtual-environment Python path on Windows. The build install
 
 - `content/en/` and `content/zh/`: separately editable tutorials, homepage and news, adapted from the versioned bilingual manual.
 - `articles.json`: matching routes and titles; keep both languages together when adding a chapter.
+- `article-groups.json`: bilingual basic-function categories for homepage Contents and summaries. Each article belongs to exactly one category.
+- `cases.json`: problem-oriented case studies grouped in the Articles dropdown and index; separate from basic function guides.
 - `reference-notes.json`: reviewed bilingual purposes, return values, interpretation notes and related articles for all public functions.
 - `docs/FUNCTION_REFERENCE.md`: bilingual argument descriptions and function examples.
 - `R/` and `NAMESPACE`: authoritative exported-function signatures and default expressions. `export_reference.R` parses function definitions without running package code.

@@ -2,10 +2,31 @@
   'use strict';
   const zh = document.body.dataset.language === 'zh';
   const menu = document.querySelector('.menu-toggle');
+  const articles = document.querySelector('.articles-dropdown');
+  const closeArticles = () => { articles.open = false; };
+  document.addEventListener('click', event => {
+    if (!articles.contains(event.target)) closeArticles();
+  });
+  articles.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && articles.open) {
+      event.preventDefault();
+      closeArticles();
+      articles.querySelector('summary').focus();
+    }
+  });
+  articles.addEventListener('focusout', event => {
+    if (!articles.contains(event.relatedTarget)) closeArticles();
+  });
+  articles.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+    closeArticles();
+    menu.setAttribute('aria-expanded', 'false');
+    document.getElementById('navigation').classList.remove('open');
+  }));
   menu.addEventListener('click', () => {
     const expanded = menu.getAttribute('aria-expanded') === 'true';
     menu.setAttribute('aria-expanded', String(!expanded));
     document.getElementById('navigation').classList.toggle('open', !expanded);
+    if (expanded) closeArticles();
   });
   const language = document.getElementById('language-switch');
   const updateLanguageHash = () => {

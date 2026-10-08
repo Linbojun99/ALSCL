@@ -1,0 +1,66 @@
+[
+  {
+    "slug": "case-simulate-survey",
+    "title": {
+      "en": "How do I simulate survey data?",
+      "zh": "如何模拟调查数据？"
+    },
+    "group": "simulation",
+    "group_title": {
+      "en": "Simulation experiments",
+      "zh": "模拟实验"
+    },
+    "description": {
+      "en": "Generate annual input tables or full operating-model replicates, retain truth, and choose the right simulation pathway.",
+      "zh": "生成年度输入表或完整操作模型重复，保留真值，并选择适合问题的模拟流程。"
+    }
+  },
+  {
+    "slug": "case-fit-survey",
+    "title": {
+      "en": "How do I fit my own survey data?",
+      "zh": "如何拟合自己的实测调查数据？"
+    },
+    "group": "assessment",
+    "group_title": {
+      "en": "Fit an assessment",
+      "zh": "拟合资源评估模型"
+    },
+    "description": {
+      "en": "Import a workbook, check its structure, specify supported biological assumptions, fit ALSCL and inspect the results.",
+      "zh": "导入工作簿、检查数据结构、指定有依据的生物假设，拟合 ALSCL 并检查结果。"
+    }
+  },
+  {
+    "slug": "case-compare-assessments",
+    "title": {
+      "en": "Do ACL and ALSCL give different answers?",
+      "zh": "ACL 与 ALSCL 的评估结果有什么不同？"
+    },
+    "group": "evaluation",
+    "group_title": {
+      "en": "Evaluate an assessment",
+      "zh": "评估结果的可靠性"
+    },
+    "description": {
+      "en": "Fit both model structures to the same synthetic observations and examine numerical diagnostics, residuals and population estimates.",
+      "zh": "对同一组模拟观测拟合两种模型，检查数值诊断、残差及种群估计。"
+    }
+  },
+  {
+    "slug": "case-retrospective-bias",
+    "title": {
+      "en": "Do estimates change when recent data are removed?",
+      "zh": "移除近期数据后，估计结果会怎样变化？"
+    },
+    "group": "evaluation",
+    "group_title": {
+      "en": "Evaluate an assessment",
+      "zh": "评估结果的可靠性"
+    },
+    "description": {
+      "en": "Refit successively shorter time series and interpret retrospective trajectories and Mohn’s rho.",
+      "zh": "逐次截短时间序列并重新拟合，解释回溯轨迹与 Mohn rho。"
+    }
+  }
+]
