@@ -3,6 +3,7 @@
 from pathlib import Path
 import argparse
 import html
+import hashlib
 import json
 import posixpath
 import re
@@ -19,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'website'
 REPO = 'https://github.com/Linbojun99/ALSCL'
 BASE = 'https://linbojun99.github.io/ALSCL/'
+LOGO_VERSION = hashlib.sha256((ROOT / 'ALSCLlogo.png').read_bytes()).hexdigest()[:12]
 VERSION = re.search(r'^Version: (.+)$', (ROOT / 'DESCRIPTION').read_text(), re.M)[1]
 ARTICLES = json.loads((WEB / 'articles.json').read_text())
 ARTICLE_GROUPS = json.loads((WEB / 'article-groups.json').read_text())
@@ -215,7 +217,7 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
     source_link = f'<a class="source-link" href="{REPO}/blob/main/{source}">{ui["source"]} ↗</a>' if source else ''
     description = description or plain[:180]
     canonical = BASE + route
-    logo = f'<img class="package-logo" src="{rel(route,"assets/ALSCLlogo.png")}" alt="ALSCL" width="140" height="140">' if kind=='home' else ''
+    logo = f'<img class="package-logo" src="{rel(route,"assets/ALSCLlogo.png")}?v={LOGO_VERSION}" alt="ALSCL" width="140" height="140">' if kind=='home' else ''
     section_label = ui['reference'] if kind=='reference' else (ui['articles'] if kind=='case' else ('Basic functions' if lang=='en' else '基本功能'))
     breadcrumb = '' if kind=='home' else f'<div class="breadcrumb">{link(route,lang_route(lang,"index.html"),ui["home"])} <span>/</span> {section_label}</div>'
     document = f'''<!doctype html>
@@ -224,7 +226,7 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
 <meta name="description" content="{html.escape(description, quote=True)}"><meta name="theme-color" content="#f7f8fa">
 <link rel="canonical" href="{canonical}"><link rel="alternate" hreflang="en" href="{BASE+route_base}">
 <link rel="alternate" hreflang="zh-Hans" href="{BASE+'zh/'+route_base}"><link rel="alternate" hreflang="x-default" href="{BASE+route_base}">
-<link rel="icon" href="{rel(route,'assets/ALSCLlogo.png')}">
+<link rel="icon" href="{rel(route,'assets/ALSCLlogo.png')}?v={LOGO_VERSION}">
 <link rel="stylesheet" href="{rel(route,'assets/site.css')}"><link rel="stylesheet" href="{rel(route,'assets/syntax.css')}">
 <link rel="stylesheet" href="{rel(route,'assets/katex/katex.min.css')}">
 <script defer src="{rel(route,'assets/katex/katex.min.js')}"></script>
