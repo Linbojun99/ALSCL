@@ -41,3 +41,9 @@ When changing a public API, update its descriptions in the reference Markdown an
 In the repository's **Settings → Pages**, select **GitHub Actions** as the source. The Documentation workflow builds and checks pull requests, then deploys successful builds of `main`. A manual workflow dispatch is also available. No custom domain or paid hosting is required.
 
 Generated output is `_site/`, excluded from Git and R package builds. Do not replace the existing `docs/` directory with generated HTML.
+
+## Author icons and development status
+
+`assets/orcid.svg` is the unmodified ORCID iD icon from https://orcid.org/assets/vectors/orcid.logo.icon.svg. ORCID and the iD logo are trademarks of ORCID, Inc.; the icon links to the named author's supplied record. See https://info.orcid.org/brand-guidelines/.
+
+The homepage's Dev status section uses live GitHub Actions badges for the existing `R-CMD-check.yaml` and `documentation.yaml` workflows on `main`. Badge images are loaded from GitHub and may briefly lag the linked workflow logs because of caching.
