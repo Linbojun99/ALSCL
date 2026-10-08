@@ -199,8 +199,8 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
         <section><h2>{'License' if lang=='en' else '许可证'}</h2><a href="{REPO}/blob/main/LICENSE">GPL-3</a></section>
         <section><h2>{'Citation' if lang=='en' else '引用'}</h2><p><a href="#citation">Zhang &amp; Cadigan (2022)</a></p><p><a href="#krill-paper">Dong et al. (2025)</a></p></section>
         <section><h2>{'Developers' if lang=='en' else '开发者'}</h2>
-        <p>Hongyu Lin<small>{'Author, maintainer' if lang=='en' else '作者、维护者'}</small></p>
-        <p>Fan Zhang<small>{'Author' if lang=='en' else '作者'}</small></p>
+        <p>Hongyu Lin<small>{'Author, maintainer' if lang=='en' else '作者、维护者'}</small><small><a href="https://orcid.org/0000-0001-6226-179X" aria-label="Hongyu Lin ORCID: 0000-0001-6226-179X">ORCID: 0000-0001-6226-179X</a></small></p>
+        <p>Fan Zhang<small>{'Author' if lang=='en' else '作者'}</small><small><a href="https://orcid.org/0000-0003-0214-1790" aria-label="Fan Zhang ORCID: 0000-0003-0214-1790">ORCID: 0000-0003-0214-1790</a></small></p>
         <p>Sisong Dong<small>{'Author, contributor' if lang=='en' else '作者、贡献者'}</small></p></section>'''
     source_link = f'<a class="source-link" href="{REPO}/blob/main/{source}">{ui["source"]} ↗</a>' if source else ''
     description = description or plain[:180]
@@ -228,7 +228,7 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
 <div class="nav-tools"><button id="search-open" aria-label="{ui['search']}"><span>⌕</span> {'Search' if lang=='en' else '搜索'} <kbd>/</kbd></button>{switch}<a class="github" href="{REPO}" aria-label="GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.77-.24.77-.54v-2.1c-3.12.68-3.78-1.33-3.78-1.33-.51-1.29-1.24-1.64-1.24-1.64-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.72.39-1.22.71-1.5-2.49-.28-5.11-1.25-5.11-5.54 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.08 1.15a10.72 10.72 0 0 1 5.6 0c2.14-1.45 3.08-1.15 3.08-1.15.61 1.55.23 2.7.12 2.98.72.79 1.15 1.79 1.15 3.02 0 4.3-2.62 5.25-5.12 5.53.4.35.76 1.03.76 2.08v3.1c0 .3.2.65.77.54A11.2 11.2 0 0 0 12 .8Z"/></svg></a></div></nav></header>
 <div class="layout"><main id="main">{breadcrumb}<div class="page-header">{logo}<h1>{html.escape(title)}</h1>{source_link}</div>
 {soup}</main><aside>{sidebar}</aside></div>
-<footer><span>{'Developed by' if lang=='en' else '开发者'} Hongyu Lin, Fan Zhang, Sisong Dong.</span><span>ALSCL {VERSION} · <a href="{REPO}">{'Source & documentation' if lang=='en' else '源代码与文档'}</a></span></footer>
+<footer><span>{'Developed by' if lang=='en' else '开发者'} <a href="https://orcid.org/0000-0001-6226-179X">Hongyu Lin</a>, <a href="https://orcid.org/0000-0003-0214-1790">Fan Zhang</a>, Sisong Dong.</span><span>ALSCL {VERSION} · <a href="{REPO}">{'Source & documentation' if lang=='en' else '源代码与文档'}</a></span></footer>
 <dialog id="search-dialog" aria-labelledby="search-title"><div class="search-head"><h2 id="search-title">{ui['search']}</h2><button id="search-close" aria-label="{ui['close']}">×</button></div>
 <label class="sr-only" for="search-input">{ui['search']}</label><input id="search-input" type="search" autocomplete="off" placeholder="{'Function, argument or topic…' if lang=='en' else '函数、参数或主题…'}">
 <p id="search-status" aria-live="polite"></p><div id="search-results"></div></dialog>

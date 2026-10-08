@@ -676,6 +676,8 @@ packageVersion("ALSCL")
 
 Authors: Hongyu Lin, Fan Zhang and Sisong Dong; Sisong Dong is also credited as a contributor. Cite the installed package version and Git commit.
 
+ORCID: [Hongyu Lin — 0000-0001-6226-179X](https://orcid.org/0000-0001-6226-179X) · [Fan Zhang — 0000-0003-0214-1790](https://orcid.org/0000-0003-0214-1790).
+
 ## 许可 / License
 
 [GPL-3 License](LICENSE.md)。问题反馈：[Issues](https://github.com/Linbojun99/ALSCL/issues)。
