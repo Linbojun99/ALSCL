@@ -197,11 +197,11 @@ def render_page(out, route_base, lang, title, body, source='', kind='article', d
         <p><a href="{REPO}/issues">{'Report a bug' if lang=='en' else '问题反馈'}</a></p>
         <p>{link(route, lang_route(lang,'articles/data-preparation.html'), 'Data and Excel templates' if lang=='en' else '数据与 Excel 模板')}</p></section>
         <section><h2>{'License' if lang=='en' else '许可证'}</h2><a href="{REPO}/blob/main/LICENSE">GPL-3</a></section>
-        <section><h2>{'Citation' if lang=='en' else '引用'}</h2><a href="#citation">Zhang &amp; Cadigan (2022)</a></section>
+        <section><h2>{'Citation' if lang=='en' else '引用'}</h2><p><a href="#citation">Zhang &amp; Cadigan (2022)</a></p><p><a href="#krill-paper">Dong et al. (2025)</a></p></section>
         <section><h2>{'Developers' if lang=='en' else '开发者'}</h2>
         <p>Hongyu Lin<small>{'Author, maintainer' if lang=='en' else '作者、维护者'}</small></p>
         <p>Fan Zhang<small>{'Author' if lang=='en' else '作者'}</small></p>
-        <p>Sisong Dong<small>{'Contributor' if lang=='en' else '贡献者'}</small></p></section>'''
+        <p>Sisong Dong<small>{'Author, contributor' if lang=='en' else '作者、贡献者'}</small></p></section>'''
     source_link = f'<a class="source-link" href="{REPO}/blob/main/{source}">{ui["source"]} ↗</a>' if source else ''
     description = description or plain[:180]
     canonical = BASE + route

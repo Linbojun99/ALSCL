@@ -23,10 +23,6 @@ Authors:
 \itemize{
   \item Hongyu Lin \email{linbojun99@gmail.com} (\href{https://orcid.org/0000-0001-6226-179X}{ORCID})
   \item Fan Zhang \email{f-zhang@shou.edu.cn} (\href{https://orcid.org/0000-0003-0214-1790}{ORCID})
-}
-
-Other contributors:
-\itemize{
   \item Sisong Dong [contributor]
 }
 

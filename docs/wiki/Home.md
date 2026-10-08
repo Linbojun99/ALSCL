@@ -43,5 +43,6 @@ This manual covers model principles, data, simulation, fitting, diagnostics, plo
 **董思宋 · Sisong Dong**
 
 - [GitHub · dongworks97](https://github.com/dongworks97)
+- [南极磷虾评估论文 · Antarctic krill assessment (Dong, Zhang & Zhu, 2025)](https://doi.org/10.3354/meps14923)
 
 理论来源 / Reference: Zhang & Cadigan (2022), *Fish and Fisheries* 23,1121–1135. [Paper and Appendix S1](https://doi.org/10.1111/faf.12673).

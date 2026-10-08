@@ -5,7 +5,7 @@ Authors@R: c(person("Hongyu", "Lin", role = c("aut", "cre"), email = "linbojun99
            comment = c(ORCID = "0000-0001-6226-179X")),
              person("Fan", "Zhang", role = "aut", email = "f-zhang@shou.edu.cn",
            comment = c(ORCID = "0000-0003-0214-1790")),
-             person("Sisong", "Dong", role = "ctb"))
+             person("Sisong", "Dong", role = c("aut", "ctb")))
 Maintainer: Hongyu Lin <linbojun99@gmail.com>
 Description: Provides two integrated statistical models for survey-based
     catch-at-length stock assessment built on the Template Model Builder (TMB)

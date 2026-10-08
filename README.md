@@ -643,15 +643,32 @@ Zhang, F. & Cadigan, N. G. (2022). *An age- and length-structured statistical ca
 }
 ```
 
+### 南极磷虾应用 / Antarctic krill application
+
+Dong, S., Zhang, F. & Zhu, G. (2025). Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill *Euphausia superba*. *Marine Ecology Progress Series*, **769**, 1–22. [doi:10.3354/meps14923](https://doi.org/10.3354/meps14923).
+
+该研究将 ACL 与 ALSCL 应用于南极磷虾，考察同一队列内体长相关的生长和死亡率差异如何影响资源评估结果。
+
+This study applies ACL and ALSCL to Antarctic krill to examine how length-dependent growth and mortality within cohorts affect assessment results.
+
+```bibtex
+@article{dong2025length,
+  title={Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill Euphausia superba},
+  author={Dong, Sisong and Zhang, Fan and Zhu, Guoping},
+  journal={Marine Ecology Progress Series}, volume={769},
+  pages={1--22}, year={2025}, doi={10.3354/meps14923}
+}
+```
+
 ```r
 # 包引用及实际版本 / Package citation and installed version
 citation("ALSCL")
 packageVersion("ALSCL")
 ```
 
-包作者 Hongyu Lin、Fan Zhang，贡献者 Sisong Dong；使用时同时记录包版本及提交号。
+包作者 Hongyu Lin、Fan Zhang 和 Sisong Dong（同时为贡献者）；使用时同时记录包版本及提交号。
 
-Authors: Hongyu Lin and Fan Zhang; contributor: Sisong Dong. Cite the installed package version and Git commit.
+Authors: Hongyu Lin, Fan Zhang and Sisong Dong; Sisong Dong is also credited as a contributor. Cite the installed package version and Git commit.
 
 ## 许可 / License
 

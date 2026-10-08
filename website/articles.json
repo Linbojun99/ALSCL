@@ -67,8 +67,8 @@
     },
     "source": "docs/wiki/06-Fitting.md",
     "description": {
-      "en": "Set starting values, bounds, fixed parameters, time steps and repeated optimization starts for run_acl() and run_alscl().",
-      "zh": "为 run_acl() 与 run_alscl() 设置初值、边界、固定参数、时间步和重复优化起点。"
+      "en": "Set starting values, bounds, fixed parameters, time steps and successive optimization passes for run_acl() and run_alscl().",
+      "zh": "为 run_acl() 与 run_alscl() 设置初值、边界、固定参数、时间步和连续优化轮数。"
     }
   },
   {

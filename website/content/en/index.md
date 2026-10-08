@@ -82,4 +82,10 @@ Use the [GitHub issue tracker](https://github.com/Linbojun99/ALSCL/issues) for b
 
 Zhang, F. & Cadigan, N. G. (2022). An age- and length-structured statistical catch-at-length model for hard-to-age fisheries stocks. *Fish and Fisheries*, **23**(5), 1121–1135. [doi:10.1111/faf.12673](https://doi.org/10.1111/faf.12673).
 
+<h3 id="krill-paper">Related application: Antarctic krill</h3>
+
+Dong, S., Zhang, F. & Zhu, G. (2025). Length-dependent growth and mortality within each cohort cannot be ignored in stock assessment: a case study of Antarctic krill *Euphausia superba*. *Marine Ecology Progress Series*, **769**, 1–22. [doi:10.3354/meps14923](https://doi.org/10.3354/meps14923).
+
+This study applies ACL and ALSCL to Antarctic krill to examine how length-dependent growth and mortality within cohorts affect assessment results.
+
 When reporting analyses, also record the ALSCL version, code revision, data source and fitted assumptions.
