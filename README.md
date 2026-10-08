@@ -5,9 +5,17 @@
 [![License: GPL-3](https://img.shields.io/badge/License-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 <!-- badges: end -->
 
-**Documentation:** [English](https://linbojun99.github.io/ALSCL/) · [简体中文](https://linbojun99.github.io/ALSCL/zh/) · [Function reference](https://linbojun99.github.io/ALSCL/reference/)
+## Documentation website / 在线文档
 
-The documentation website includes tutorials, worked figures and all public functions, with a language switch on every page. [Website build and publishing instructions](website/README.md).
+**[Visit the ALSCL documentation website →](https://linbojun99.github.io/ALSCL/)**
+
+ALSCL has a dedicated documentation website with installation instructions, all 15 basic-function topics, a reference for all 43 public functions, and worked cases for simulation, fitting your own survey data, model comparison and retrospective analysis. English is the default; use the language switch on any page to read the Simplified Chinese version.
+
+ALSCL 提供独立的在线文档网站，包含安装说明、15 项基本功能、全部 43 个公开函数的参考，以及模拟、实测调查数据拟合、模型比较和回溯分析的操作案例。网站默认英文，每页均可切换为简体中文。
+
+- [English documentation](https://linbojun99.github.io/ALSCL/) · [简体中文文档](https://linbojun99.github.io/ALSCL/zh/)
+- [Worked case studies / 专题案例](https://linbojun99.github.io/ALSCL/articles/)
+- [Function reference / 函数参考](https://linbojun99.github.io/ALSCL/reference/)
 
 **基于年龄及体长结构的统计调查体长种群评估模型**
 
@@ -70,6 +78,7 @@ Estimation is performed via maximum likelihood with the objective function calcu
 
 | 完整学习资源 / Learning resource | 内容 / Contents |
 |---|---|
+| **[在线文档网站 / Documentation website](https://linbojun99.github.io/ALSCL/)** | 基本功能、专题案例和函数参考；支持英文与简体中文 / Basic functions, worked cases and function reference in English and Simplified Chinese |
 | **[Wiki 双语书籍 / Wiki book](https://github.com/Linbojun99/ALSCL/wiki)** | 15 章、目录、前后页导航 / 15 chapters with navigation |
 | [完整单页书稿 / Complete book](docs/BOOK.md) | Wiki 内容在仓库中的完整版本 / Versioned book in this repository |
 | [模块化使用指南 / User guide](docs/USER_GUIDE.md) | 理论、数据、模拟、拟合、诊断与回溯 / Complete workflow |
