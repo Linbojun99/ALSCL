@@ -13,7 +13,8 @@ Complete the [worked YTF example](first-model.html) first. The examples below us
 | `map` |Fix or release parameters at their supplied values|
 | `train_times` |Successive optimization passes, not independent random starts|
 | `control` |Optimizer controls|
-| `ncores` |Independent fit starts versus outer replicate/peel workers|
+| `ncores` |Maximum simultaneous socket workers; not threads within one start|
+| `nstarts` |Total fit starts, defaulting to ncores. Fix this value when comparing worker counts|
 | `output` |Export diagnostics and plots under output when TRUE|
 
 

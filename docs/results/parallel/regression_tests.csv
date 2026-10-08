@@ -1,0 +1,32 @@
+"file","test","nb","failed","skipped","error","warning","passed","real"
+"test-catchability-plot.R","catchability plots connect inputs without smoothing overshoot",3,0,FALSE,FALSE,0,3,0.127
+"test-diagnostics.R","Mohn rho averages terminal-year differences over all peels",2,0,FALSE,FALSE,0,2,0.083
+"test-diagnostics.R","diagnostics use maximum absolute gradients and valid observation pairs",6,0,FALSE,FALSE,0,6,0.016
+"test-diagnostics.R","growth confidence intervals include Linf and parameter covariances",2,0,FALSE,FALSE,0,2,0.112
+"test-fit.R","both public fitting APIs return finite usable results and consistent diagnostics",36,0,FALSE,FALSE,0,36,1.561
+"test-fit.R","parallel starts agree with serial fits without jittering fixed effects",4,0,FALSE,FALSE,0,4,3.055
+"test-fit.R","retrospective wrappers preserve positional parameters and socket results",2,0,FALSE,FALSE,0,2,1.631
+"test-fit.R","sim_acl reads saved simulations and honors bounds-only calls",5,0,FALSE,FALSE,0,5,0.0969999999999995
+"test-input.R","midpoints preserve unequal widths and decimals",7,0,FALSE,FALSE,0,7,0.0199999999999996
+"test-input.R","quarterly ages agree with simulation and missing cells are safe",6,0,FALSE,FALSE,0,6,0.0220000000000002
+"test-input.R","legacy parameter calls, named bounds and maps are aligned",9,0,FALSE,FALSE,0,9,0.016
+"test-input.R","one requested optimization pass performs one call",2,0,FALSE,FALSE,0,2,0.00299999999999834
+"test-input.R","empty overrides preserve defaults and unnamed ALSCL maps are rejected",3,0,FALSE,FALSE,0,3,0.00600000000000023
+"test-model-core.R","age-length probabilities match the normal distribution throughout the CV range",18,0,FALSE,FALSE,0,18,0.109999999999999
+"test-model-core.R","ACL plus group retains the previous oldest fish",1,0,FALSE,FALSE,0,1,0.0109999999999992
+"test-model-core.R","ALSCL conserves survivors and recovers constant F including the plus group entry",13,0,FALSE,FALSE,0,13,0.0500000000000007
+"test-model-core.R","double evaluation never depends on uninitialized Eigen storage",6,0,FALSE,FALSE,0,6,7.129
+"test-palettes.R","ggsci settings propagate and explicit overrides survive",9,0,FALSE,FALSE,0,9,0.0960000000000001
+"test-palettes.R","retrospective colors follow terminal periods and allow overrides",9,0,FALSE,FALSE,0,9,0.258999999999999
+"test-palettes.R","continuous and ridge palettes retain legacy options",13,0,FALSE,FALSE,0,13,0.0220000000000002
+"test-palettes.R","ridges keep ordered gradient colors independently of categorical themes",9,0,FALSE,FALSE,0,9,0.415000000000001
+"test-parallel.R","fixed multistart work is reproducible across socket worker counts",28,0,FALSE,FALSE,0,28,2.733
+"test-parallel.R","worker cap and original ncores-only calls remain valid",6,0,FALSE,FALSE,0,6,1.21
+"test-parallel.R","sequential jitter preserves the caller's RNG state and RNG kind",3,0,FALSE,FALSE,0,3,1.282
+"test-parallel.R","a failed start retains useful diagnostics",4,0,FALSE,FALSE,0,4,0.00600000000000023
+"test-parallel.R","both retrospective models agree with 1, 2 and 4 requested workers",8,0,FALSE,FALSE,0,8,5.869
+"test-parallel.R","sim_acl fits actual replicates on the requested socket workers",11,0,FALSE,FALSE,0,11,5.537
+"test-simulation.R","simulation uses consistent age units and independent survey errors by default",9,0,FALSE,FALSE,0,9,0.0210000000000008
+"test-simulation.R","example observations are survey abundance rather than Baranov catch",1,0,FALSE,FALSE,0,1,0.00300000000000011
+"test-simulation.R","manual quarterly age simulations retain quarterly observation labels",5,0,FALSE,FALSE,0,5,0.00799999999999557
+"test-ytf-example.R","the bundled YTF example has aligned positive survey input and provenance",16,0,FALSE,FALSE,0,16,0.0210000000000008

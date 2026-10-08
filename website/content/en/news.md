@@ -1,3 +1,7 @@
+## Parallel fitting update
+
+`run_acl()` and `run_alscl()` now accept `nstarts` separately from `ncores`, with the previous default behavior preserved. Returned diagnostics record actual worker PIDs and CPU time. See [measured parallel performance](../articles/reproducibility.html) for equal-work timings and reproducible evidence.
+
 ## ALSCL 2.0.0
 
 - Two survey catch-at-length models, ACL and ALSCL, with annual or quarterly time steps.

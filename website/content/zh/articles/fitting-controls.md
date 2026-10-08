@@ -13,7 +13,8 @@
 | `map` |固定或释放参数；固定值来自 `parameters`|
 | `train_times` |从优化结果继续优化的次数，并非随机多起点|
 | `control` |传给 `nlminb` 的控制项，如 `eval.max`、`iter.max`|
-| `ncores` |单次拟合为独立初始点数，使用 socket 并行并扰动自由参数；批量/回溯为外层并行数|
+| `ncores` |同时运行的最大 socket 进程数，不是单个起点内部的线程数|
+| `nstarts` |拟合的总初始点数，默认等于 ncores；比较并行数时固定此值|
 | `output` |FALSE 不写文件，TRUE 在 output 目录导出诊断与图|
 
 `initialize_params(species=...)` 建立模拟参数；`create_parameters(model_type=..., species=...)` 建立估计初值及边界。后者的物种预设不会自动替你更改 `run_*` 的 M、年龄、调查 q 或数据。

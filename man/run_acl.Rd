@@ -25,7 +25,8 @@ run_acl(
   silent = FALSE,
   growth_step = NULL,
   zero_action = c("missing", "error"),
-  control = list()
+  control = list(),
+  nstarts = ncores
 )
 }
 \arguments{
@@ -60,8 +61,8 @@ value; NULL releases a default fixed parameter. Other defaults remain in force.}
 
 \item{train_times}{Positive integer; exact number of optimization passes per start.}
 
-\item{ncores}{Positive integer; number of independent starts. Values above one
-use socket workers and jitter free parameters only.}
+\item{ncores}{Positive integer; maximum number of socket workers for fitting
+independent starts. Uses at most nstarts workers; not threads within one start.}
 
 \item{silent}{Suppress fitting progress messages when TRUE.}
 
@@ -72,11 +73,20 @@ ACL infers rec.age when below one, otherwise one, if this argument is NULL.}
 or reject them with "error". NA is always missing; negative/infinite values fail.}
 
 \item{control}{A named list of nlminb control settings.}
+
+\item{nstarts}{Positive integer; number of independent starts. Defaults to
+ncores for backward compatibility. Set explicitly to compare worker counts
+at equal work. Start 1 uses supplied values; later starts deterministically
+jitter free parameters only, identically for sequential and parallel fits.}
 }
 \value{
 A list with report, opt, obj, est_std, vcov, pdHess, gradient,
 max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,
 year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics.
+start_diagnostics records each start's PID, Unix start/end times, elapsed
+and CPU seconds, objective and convergence code; workers and nstarts record
+the actual worker count and total starts. The lowest finite objective is
+selected; inspect convergence diagnostics separately.
 The DLL remains loaded so the returned obj can be evaluated in the same session.
 }
 \description{

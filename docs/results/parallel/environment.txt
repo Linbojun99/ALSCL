@@ -1,0 +1,17 @@
+UTC: 2026-10-08 00:34:14 UTC
+R: R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
+ALSCL: 2.0.0
+TMB: 1.9.21
+RcppEigen: 0.3.4.0.2
+Logical CPUs: 10
+Data: synthetic YTF_example; seed 4; 10 years; 23 length bins; 15 ages
+Work: 4 fixed starts; 2 successive optimizer passes each
+Repeats: 3
+Warm compiled templates; compilation and warm-up excluded.
+Total fit timing includes preparation, worker startup/shutdown, fitting, final report and sdreport.
+Each start builds its own real TMB objective and calls nlminb with analytic gradients.
+Default optimizer controls and original conditional teaching maps; no early truncation.
+Other user analyses may share this computer. No unrelated processes are stopped.
+CPU: Apple M2 Pro
+RAM bytes: 34359738368

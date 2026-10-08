@@ -302,7 +302,7 @@ def reference_body(name, entry, lang, supplements):
             default=entry['defaults'][arg] or ('…' if arg=='...' else ui['required'])
             explanation=row[3 if lang=='en' else 2]
             if arg=='ncores' and lang=='zh':
-                explanation = '独立起点数；大于 1 时以 socket 并行，扰动自由参数。不是 TMB 线程数。' if name.startswith('run_') else '外层并行进程数，用于模拟重复或回溯拟合；每个内部拟合使用单进程。'
+                explanation = '独立起点拟合的最大并行进程数，实际不超过 nstarts；不是单个 TMB 拟合的线程数。' if name.startswith('run_') else '外层并行进程数，用于模拟重复或回溯拟合；每个内部拟合使用单进程。'
             if arg=='growth_step' and name=='run_alscl': explanation='Years per model step; default 1. Use 0.25 for quarterly data.' if lang=='en' else '每个模型时间步包含的年数，默认 1；季度数据显式设为 0.25。'
             body+=f'<tr><th scope="row"><code>{html.escape(arg)}</code></th><td><code>{html.escape(default)}</code></td><td>{md(explanation)}</td></tr>'
         body+='</tbody></table>'

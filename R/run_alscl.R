@@ -16,8 +16,12 @@
 #' @param len_border Interior boundaries, one fewer than the number of length bins.
 #' @param output Save diagnostic tables and plots below output/ when TRUE.
 #' @param train_times Positive integer; exact number of optimization passes per start.
-#' @param ncores Positive integer; number of independent starts. Values above one
-#'   use socket workers and jitter free parameters only.
+#' @param ncores Positive integer; maximum number of socket workers for fitting
+#'   independent starts. Uses at most nstarts workers; not threads within one start.
+#' @param nstarts Positive integer; number of independent starts. Defaults to
+#'   ncores for backward compatibility. Set explicitly to compare worker counts
+#'   at equal work. Start 1 uses supplied values; later starts deterministically
+#'   jitter free parameters only, identically for sequential and parallel fits.
 #' @param silent Suppress fitting progress messages when TRUE.
 #' @param growth_step Time between consecutive ages, in years. Use 0.25 for quarters.
 #'   ACL infers rec.age when below one, otherwise one, if this argument is NULL.
@@ -31,6 +35,10 @@
 #' @return A list with report, opt, obj, est_std, vcov, pdHess, gradient,
 #'   max_abs_gradient (also final_outer_mgc), convergence_code, bound_hit,
 #'   year, age, length-bin metadata, growth_step, elapsed and multi-start diagnostics.
+#'   start_diagnostics records each start's PID, Unix start/end times, elapsed
+#'   and CPU seconds, objective and convergence code; workers and nstarts record
+#'   the actual worker count and total starts. The lowest finite objective is
+#'   selected; inspect convergence diagnostics separately.
 #'   The DLL remains loaded so the returned obj can be evaluated in the same session.
 #' @export
 #' @param len_lower,len_upper Optional bounds consistent with len_border and len_mid.
@@ -41,9 +49,9 @@ run_alscl <- function(data.CatL, data.wgt, data.mat, rec.age, nage, M, sel_L50, 
                       growth_step = 1, parameters = NULL, parameters.L = NULL, parameters.U = NULL,
                       map = NULL, len_mid = NULL, len_border = NULL, len_lower = NULL, len_upper = NULL,
                       output = FALSE, train_times = 1, ncores = 1, silent = FALSE,
-                      zero_action = c("missing", "error"), control = list()) {
+                      zero_action = c("missing", "error"), control = list(), nstarts = ncores) {
   prepared <- .acl_prepare_data(data.CatL, data.wgt, data.mat, rec.age, nage, M,
     sel_L50, sel_L95, growth_step, len_mid, len_border, len_lower, len_upper, zero_action)
   .acl_fit("ALSCL", prepared, parameters, parameters.L, parameters.U, map,
-           train_times, ncores, silent, output, control)
+           train_times, ncores, silent, output, control, nstarts)
 }

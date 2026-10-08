@@ -20,7 +20,7 @@ cpp_fixture <- function(model="ALSCL", cv=.2, quarterly=TRUE) {
   obj<-TMB::MakeADFun(d,p,DLL=info$dll_name,silent=TRUE)
   list(obj=obj,data=d,parameters=p,info=info)
 }
-fit_fixture <- function(model="ACL", ncores=1) {
+fit_fixture <- function(model="ACL", ncores=1, nstarts=ncores) {
   f<-fixture_frames(); f$data.CatL[[1]]<-as.character(seq(15,55,5));f$data.wgt[[1]]<-f$data.mat[[1]]<-f$data.CatL[[1]]
   p<-create_parameters(model_type=tolower(model))$parameters
   p$log_Linf<-log(60);p$log_vbk<-log(.2);p$mean_log_R<-log(100);p$log_init_Z<-log(.5)
@@ -34,7 +34,7 @@ fit_fixture <- function(model="ACL", ncores=1) {
   truth<-TMB::MakeADFun(d,pars,DLL=info$dll_name,silent=TRUE)
   f$data.CatL[-1]<-exp(truth$report(truth$par)$Elog_index)
   mapping<-lapply(p,function(x)factor(NA));mapping$mean_log_R<-NULL
-  args<-c(f,list(parameters=p,map=mapping,ncores=ncores,silent=TRUE))
+  args<-c(f,list(parameters=p,map=mapping,ncores=ncores,nstarts=nstarts,silent=TRUE))
   result<-do.call(if(model=="ACL")run_acl else run_alscl,args)
   list(result=result,input=f,parameters=p,map=mapping)
 }

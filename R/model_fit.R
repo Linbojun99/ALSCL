@@ -35,10 +35,50 @@
   }
   opt
 }
+.acl_fit_start <- function(i, data, params, mapping, random, dll, bounds,
+                           train_times, control, obj = NULL) {
+  started_at <- as.numeric(Sys.time())
+  clock <- proc.time()
+  # Identical starting points regardless of worker count, without changing the
+  # caller's random-number stream during sequential multistart fits.
+  if (i > 1L) {
+    previous_kind <- RNGkind()
+    had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    if (had_seed) previous_seed <- get(".Random.seed", envir = .GlobalEnv)
+    on.exit({
+      do.call(RNGkind, as.list(previous_kind))
+      if (had_seed) assign(".Random.seed", previous_seed, envir = .GlobalEnv)
+      else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+        rm(".Random.seed", envir = .GlobalEnv)
+    }, add = TRUE)
+  }
+  start <- bounds$start
+  if (i > 1L) {
+    set.seed(137L * i, kind = "Mersenne-Twister", normal.kind = "Inversion")
+    start <- start + stats::rnorm(length(start), 0, .15)
+  }
+  start <- pmax(bounds$lower, pmin(bounds$upper, start))
+  opt <- tryCatch({
+    if (is.null(obj)) obj <- TMB::MakeADFun(data, params, random = random,
+      map = mapping, DLL = dll, inner.control = list(trace = FALSE, maxit = 500), silent = TRUE)
+    .acl_optimize(obj, start, bounds$lower, bounds$upper, train_times, control)
+  }, error = function(e) list(objective = Inf, message = conditionMessage(e), convergence = 1L))
+  elapsed <- proc.time() - clock
+  opt$start_id <- i
+  opt$initial <- start
+  opt$pid <- Sys.getpid()
+  opt$started_at <- started_at
+  opt$finished_at <- as.numeric(Sys.time())
+  opt$elapsed <- unname(elapsed[["elapsed"]])
+  opt$cpu_seconds <- unname(sum(elapsed[c("user.self", "sys.self")]))
+  opt
+}
 .acl_fit <- function(model, prepared, parameters, parameters.L, parameters.U, map,
-                     train_times, ncores, silent, output, control) {
+                     train_times, ncores, silent, output, control, nstarts = ncores) {
   train_times <- .acl_positive_integer(train_times, "train_times")
   ncores <- .acl_positive_integer(ncores, "ncores")
+  nstarts <- .acl_positive_integer(nstarts, "nstarts")
+  workers <- min(ncores, nstarts)
   started <- proc.time()[["elapsed"]]
   config <- create_parameters(model_type = tolower(model), parameters = parameters,
                               parameters.L = parameters.L, parameters.U = parameters.U)
@@ -79,36 +119,30 @@
   obj <- make_obj(); bounds <- .acl_bounds(obj$par, config)
   if (!length(obj$par)) stop("At least one fixed-effect parameter must remain free.")
   control <- utils::modifyList(list(iter.max = 2000L, eval.max = 10000L), control)
-  if (!silent) message("Fitting ", model, " with ", ncores, " start(s).")
-  if (ncores == 1L) {
-    opt <- .acl_optimize(obj, bounds$start, bounds$lower, bounds$upper, train_times, control)
-    starts <- list(list(objective = opt$objective, convergence = opt$convergence, message = opt$message))
+  if (!silent) message("Fitting ", model, " with ", nstarts, " start(s) on ", workers, " worker(s).")
+  if (workers == 1L) {
+    starts <- lapply(seq_len(nstarts), function(i) .acl_fit_start(i, d, p,
+      mapping, random, info$dll_name, bounds, train_times, control,
+      obj = if (nstarts == 1L) obj else NULL))
   } else {
-    cl <- parallel::makeCluster(ncores)
-    on.exit(parallel::stopCluster(cl), add = TRUE)
+    cl <- parallel::makeCluster(workers)
+    on.exit(if (!is.null(cl)) parallel::stopCluster(cl), add = TRUE)
     parallel::clusterCall(cl, function(lib, path) {
       .libPaths(lib); loadNamespace("TMB"); loadNamespace("ALSCL"); dyn.load(path); NULL
     }, .libPaths(), info$dll_path)
-    starts <- parallel::parLapply(cl, seq_len(ncores), function(i, data, params, mapping, random,
-                                                               dll, bounds, train_times, control) {
-      tryCatch({
-        obj <- TMB::MakeADFun(data, params, random = random, map = mapping, DLL = dll,
-          inner.control = list(trace = FALSE, maxit = 500), silent = TRUE)
-        start <- bounds$start
-        if (i > 1L) {set.seed(137L*i); start <- start + stats::rnorm(length(start), 0, .15)}
-        start <- pmax(bounds$lower, pmin(bounds$upper, start))
-        for (j in seq_len(train_times)) {
-          opt <- stats::nlminb(start, obj$fn, obj$gr, lower = bounds$lower, upper = bounds$upper, control = control)
-          start <- opt$par
-        }
-        opt
-      }, error = function(e) list(objective = Inf, message = conditionMessage(e), convergence = 1L))
-    }, data = d, params = p, mapping = mapping, random = random, dll = info$dll_name,
+    starts <- parallel::parLapply(cl, seq_len(nstarts), .acl_fit_start,
+       data = d, params = p, mapping = mapping, random = random, dll = info$dll_name,
        bounds = bounds, train_times = train_times, control = control)
-    values <- vapply(starts, function(x) if (is.finite(x$objective)) x$objective else Inf, numeric(1))
-    if (all(!is.finite(values))) stop("All optimization starts failed: ", paste(vapply(starts, `[[`, character(1), "message"), collapse = "; "))
-    opt <- starts[[which.min(values)]]
+    parallel::stopCluster(cl)
+    cl <- NULL
   }
+  values <- vapply(starts, function(x) if (is.finite(x$objective)) x$objective else Inf, numeric(1))
+  if (all(!is.finite(values))) stop("All optimization starts failed: ", paste(vapply(starts, `[[`, character(1), "message"), collapse = "; "))
+  opt <- starts[[which.min(values)]]
+  start_diagnostics <- do.call(rbind, lapply(starts, function(s) data.frame(
+    start_id = s$start_id, pid = s$pid, started_at = s$started_at, finished_at = s$finished_at,
+    elapsed = s$elapsed, cpu_seconds = s$cpu_seconds, objective = s$objective,
+    convergence = s$convergence)))
   if (!is.finite(opt$objective)) stop("Optimization produced a non-finite objective.")
   # Re-evaluate in this process to synchronize random effects, reports and gradients.
   opt$objective <- obj$fn(opt$par)
@@ -131,7 +165,8 @@
     len_mid = prepared$bins$mid, len_label = prepared$bins$labels,
     len_border = prepared$bins$border, len_lower = prepared$bins$lower, len_upper = prepared$bins$upper,
     growth_step = prepared$growth_step, elapsed = proc.time()[["elapsed"]]-started,
-    starts = starts, observations = prepared$observations)
+    starts = starts, start_diagnostics = start_diagnostics,
+    nstarts = nstarts, workers = workers, observations = prepared$observations)
   if (output) .acl_save_output(result, prepared$data.CatL)
   result
 }

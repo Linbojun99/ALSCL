@@ -1,3 +1,7 @@
+## 并行拟合更新
+
+`run_acl()` 与 `run_alscl()` 新增 `nstarts`，可以将总起点数与 `ncores` 并行进程数分开设置，保留原有默认行为。返回诊断包含实际 PID 与 CPU 时间。参见[并行性能实测](../articles/reproducibility.html)中的相同工作量计时和可复现证据。
+
 ## ALSCL 2.0.0
 
 - ACL 与 ALSCL 两种调查体长模型，支持年度或季度时间步。

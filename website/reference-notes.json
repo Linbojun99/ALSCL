@@ -9,8 +9,8 @@
       "zh": "拟合结果列表。`report` 包含种群量和预测；`opt` 包含优化参数、目标函数和状态；`obj` 是当前会话的 TMB 目标函数；`est_std` 和 `vcov` 包含近似不确定性。应检查 `pdHess`、`gradient`、`max_abs_gradient`、`convergence_code` 和 `bound_hit`。另含时间、年龄、体长组、`growth_step`、耗时及多起点诊断。"
     },
     "details": {
-      "en": "Natural and fishing mortality are instantaneous rates per model step; growth k is annual. Fixing survey catchability anchors the abundance scale. Zeros are excluded with `zero_action=\"missing\"`; decide whether that is appropriate for your observations. `ncores` controls independent starts, while `train_times` controls successive optimizer passes. A zero convergence code alone does not establish reliable inference. Keep the DLL loaded to evaluate `obj` in the same R session.",
-      "zh": "自然死亡率和捕捞死亡率是每个模型时间步的瞬时率，生长 k 以年为单位。固定调查可捕性决定丰度尺度。`zero_action=\"missing\"` 会排除零值，使用前应判断是否符合观测含义。`ncores` 控制独立起点数，`train_times` 控制每个起点的连续优化次数。优化码为零并不单独证明统计推断可靠。`obj` 依赖当前 R 会话内保持加载的动态库。"
+      "en": "Natural and fishing mortality are instantaneous rates per model step; growth k is annual. Fixing survey catchability anchors the abundance scale. Zeros are excluded with `zero_action=\"missing\"`; decide whether that is appropriate for your observations. `nstarts` controls the total starts and `ncores` limits simultaneous socket workers; by default nstarts = ncores for compatibility. `train_times` controls successive optimizer passes. Inspect `start_diagnostics` for worker PIDs, timing and convergence. A zero convergence code alone does not establish reliable inference. Keep the DLL loaded to evaluate `obj` in the same R session.",
+      "zh": "自然死亡率和捕捞死亡率是每个模型时间步的瞬时率，生长 k 以年为单位。固定调查可捕性决定丰度尺度。`zero_action=\"missing\"` 会排除零值，使用前应判断是否符合观测含义。`nstarts` 控制总起点数，`ncores` 限制同时工作的 socket 进程数；默认 nstarts = ncores 以兼容旧用法。`train_times` 控制每个起点的连续优化次数。`start_diagnostics` 记录进程 PID、耗时及收敛信息。优化码为零并不单独证明统计推断可靠。`obj` 依赖当前 R 会话内保持加载的动态库。"
     },
     "articles": [
       "first-model",
@@ -29,8 +29,8 @@
       "zh": "拟合结果列表。`report` 包含种群量和预测；`opt` 包含优化参数、目标函数和状态；`obj` 是当前会话的 TMB 目标函数；`est_std` 和 `vcov` 包含近似不确定性。应检查 `pdHess`、`gradient`、`max_abs_gradient`、`convergence_code` 和 `bound_hit`。另含时间、年龄、体长组、`growth_step`、耗时及多起点诊断。"
     },
     "details": {
-      "en": "Natural and fishing mortality are instantaneous rates per model step; growth k is annual. Fixing survey catchability anchors the abundance scale. Zeros are excluded with `zero_action=\"missing\"`; decide whether that is appropriate for your observations. `ncores` controls independent starts, while `train_times` controls successive optimizer passes. A zero convergence code alone does not establish reliable inference. Keep the DLL loaded to evaluate `obj` in the same R session.",
-      "zh": "自然死亡率和捕捞死亡率是每个模型时间步的瞬时率，生长 k 以年为单位。固定调查可捕性决定丰度尺度。`zero_action=\"missing\"` 会排除零值，使用前应判断是否符合观测含义。`ncores` 控制独立起点数，`train_times` 控制每个起点的连续优化次数。优化码为零并不单独证明统计推断可靠。`obj` 依赖当前 R 会话内保持加载的动态库。"
+      "en": "Natural and fishing mortality are instantaneous rates per model step; growth k is annual. Fixing survey catchability anchors the abundance scale. Zeros are excluded with `zero_action=\"missing\"`; decide whether that is appropriate for your observations. `nstarts` controls the total starts and `ncores` limits simultaneous socket workers; by default nstarts = ncores for compatibility. `train_times` controls successive optimizer passes. Inspect `start_diagnostics` for worker PIDs, timing and convergence. A zero convergence code alone does not establish reliable inference. Keep the DLL loaded to evaluate `obj` in the same R session.",
+      "zh": "自然死亡率和捕捞死亡率是每个模型时间步的瞬时率，生长 k 以年为单位。固定调查可捕性决定丰度尺度。`zero_action=\"missing\"` 会排除零值，使用前应判断是否符合观测含义。`nstarts` 控制总起点数，`ncores` 限制同时工作的 socket 进程数；默认 nstarts = ncores 以兼容旧用法。`train_times` 控制每个起点的连续优化次数。`start_diagnostics` 记录进程 PID、耗时及收敛信息。优化码为零并不单独证明统计推断可靠。`obj` 依赖当前 R 会话内保持加载的动态库。"
     },
     "articles": [
       "first-model",

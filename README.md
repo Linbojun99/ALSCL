@@ -621,13 +621,19 @@ Palette changes reset semantic colors, with explicit same-call colors taking pre
 
 | 入口 / Function | `ncores=1` | `ncores>1` |
 |---|---|---|
-| `run_acl`, `run_alscl` | 一个初始点 / One start | socket 多初始点，选最佳有效结果 / Independent starts |
+| `run_acl`, `run_alscl` | 依次完成 nstarts 个起点 / Sequential starts | 最多 min(ncores, nstarts) 个 socket 进程 / Parallel starts |
 | `sim_acl` | 依序重复 / Sequential replicates | 并行重复 / Parallel replicates |
 | `retro_*` | 依序回溯 / Sequential peels | 并行回溯 / Parallel peels |
+
+`nstarts` 控制总初始点数，`ncores` 控制并行进程数。默认 `nstarts = ncores`，兼容旧用法；比较速度时请固定 `nstarts`。`fit$start_diagnostics` 可查看各起点的 PID、执行时间、CPU 时间和优化码。
+
+`nstarts` controls total starts and `ncores` limits simultaneous workers. The default `nstarts = ncores` preserves earlier calls. Hold `nstarts` fixed for equal-work benchmarks; inspect `fit$start_diagnostics` for worker PIDs, timing, CPU time and optimizer codes.
 
 Windows、macOS、Linux 使用 socket 工作进程。建议先 1，再按内存与任务数选择 2–4；避免内外层同时开满。OpenMP 编译选项不等于模板自动并行，不能据此承诺加速。
 
 Socket workers support all three platforms. Begin with one and choose worker counts based on memory and task size; avoid nested oversubscription. OpenMP compilation alone does not establish parallel execution of the template.
+
+[并行实测报告 / Measured parallel performance](docs/PARALLEL_BENCHMARK.md)：同样 4 个起点，在 1、2、4 个工作进程下的 ACL/ALSCL 耗时、CPU 证据和复现脚本。 / Equal-work ACL/ALSCL timings, worker evidence and reproducible scripts.
 
 <a id="citation"></a>
 ## 引用 / Citation
